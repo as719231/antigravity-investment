@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: antigravity-investment-bot
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: LINE_CHANNEL_SECRET
+        sync: false
+      - key: LINE_CHANNEL_ACCESS_TOKEN
+        sync: false
+      - key: SHIOAJI_API_KEY
+        sync: false
+      - key: SHIOAJI_SECRET_KEY
+        sync: false
+      - key: SHIOAJI_PERSON_ID
+        sync: false
+      - key: SHIOAJI_PASSWORD
+        sync: false
+      - key: SHIOAJI_CA_PATH
+        sync: false
+      - key: SHIOAJI_CA_PASSWORD
+        sync: false

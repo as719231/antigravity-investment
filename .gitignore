@@ -1,0 +1,26 @@
+# Python 快取
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# 環境變數與 API Key
+.env
+*.env
+secrets.toml
+
+# Streamlit 快取
+.streamlit/secrets.toml
+
+# 系統檔案
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 暫存腳本
+create_shortcut.ps1
+
+# 日誌
+*.log
