@@ -87,7 +87,7 @@ def get_portfolio_context() -> str:
         print(f"載入 portfolio 失敗: {str(e)}")
         return ""
 
-def get_system_instruction(selected_lang: str = "繁體中文", price_targets: dict = None, institutional: dict = None) -> str:
+def get_system_instruction(selected_lang: str = "繁體中文", price_targets: dict = None, institutional: dict = None, stock_type: dict = None) -> str:
     """
     建立理財專員的系統 Instruction
     """
@@ -109,7 +109,7 @@ def get_system_instruction(selected_lang: str = "繁體中文", price_targets: d
 - 20日高點: {pt.get('high_20')} 元 | 20日低點: {pt.get('low_20')} 元
 - MA5: {pt.get('ma5')} 元 | MA20: {pt.get('ma20')} 元 | MA60: {pt.get('ma60')} 元
 
-⚠️ 以上買賣參考價位為技術指標計算結果，僅供參考，非絕對保證，請主人自行判斷風險。
+⚠️ 以上買賣參考價位為技術指標計算結果，僅供參考，非絕對保證，請主人自行判斷風险。
 在你的回答結尾，請以以下格式補充一段「操作建議摘要」：
   📌 **買進參考**: [第一批進場價位] | 逢低加碼: [第二批價位] | 止損線: [止損價位]
   📌 **獲利了結**: 第一目標 [第一目標價位] | 第二目標 [第二目標價位]
@@ -131,17 +131,44 @@ def get_system_instruction(selected_lang: str = "繁體中文", price_targets: d
 ====================================================
 """
 
+    # 股票類型上下文（方案 B）
+    type_ctx = ""
+    if stock_type and stock_type.get("primary_type") and stock_type["primary_type"] != "Unknown":
+        pt_type = stock_type["primary_type"]
+        pt_conf = stock_type.get("primary_confidence", 0)
+        sec_type = stock_type.get("secondary_type")
+        sec_conf = stock_type.get("secondary_confidence", 0)
+        reasons  = "\u3001".join(stock_type.get("reason", [])[:3])
+        op_tips  = "\n".join(f"  - {t}" for t in stock_type.get("operation_tips", []))
+        risks    = "\n".join(f"  - {r}" for r in stock_type.get("risks", []))
+        type_ctx = f"""
+====== 股票類型判定結果 (由 AI 自動分類) ======
+- 主要類型：{pt_type}  信心度：{pt_conf}%
+{f'- 副要類型：{sec_type}  信心度：{sec_conf}%' if sec_type else ''}
+- 判定依據：{reasons}
+
+{pt_type} 類型操作策略建議：
+{op_tips}
+
+{pt_type} 類型特有風險：
+{risks}
+
+請在輸出中自然地將上述類型特性融入分析，不需完整重述以上內容，
+但請自然地引用類型對應的操作策略和注意事項。
+=====================================================
+"""
+
     instruction = f"""
 你是一位溫暖、貼心、專業的「專屬 AI 股市理財專員」，負責輔助你的主人（Akira）進行理財規劃與股市分析。
 
 【行為準則】：
-1. 口吻親切、溫柔、有耐心，像主人的好朋友一樣。
+1. 口吻親切、溫柔、有耕心，像主人的好朋友一樣。
 2. 絕對不幫主人自動下單交易，所有的買賣決策都由主人自行手動執行。你的角色是「股市理財顧問」。
-3. 深入理解並靈活運用「14 個交易鐵律」與「5 大分時口訣」，當主人問及買賣建議（例如大漲是否要追高、急跌是否要殺肉）時，請務必引用相關的口訣或鐵律溫柔地提醒主人。
-4. 解答股市問題時，應結合技術指標（如 RSI, KD, 均線黃金/死亡交叉），同時引用 K 線單/雙/三根形態（如看漲吞沒、晨星、上吊線等）來支持你的分析。
+3. 深入理解並靈活運用　14 個交易鐵律」與「5 大分時口訣」，當主人問及買賣建議（例如大漲是否要追高、急跌是否要殺肉）時，請務必引用相關的口訣或鐵律溫柔地提醒主人。
+4. 解答股市問題時，應結合技術指標（如 RSI, KD, 均線黃金/死亡交叉），同時引用 K 線單/雙/三根形態（如看漲吞沒、晨星、上啀線等）來支持你的分析。
 5. 你擁有「聯網搜尋功能」，如果主人詢問最新的股市資訊、個股新聞或今日股價，你可以利用搜尋工具來獲取最新資訊。
 6. 重要指示 (IMPORTANT)：本對話應使用 {selected_lang} 進行。請務必完全使用 {selected_lang} 與主人交談、回覆和解釋所有內容（包含技術分析與交易建議）。
-7. 核心安全紅線 (CRITICAL SAFETY RULE)：主人 Akira 絕對不接受任何融資、融券、做空、開槓桿、或衍生性金融商品的交易建議。他傾向穩健，容許小賺小賠，但拒絕面臨破產風險。請在所有對話、分析報告與選股建議中，絕對不要提及或推薦融資、融券、做空、開槓桿等高風險交易，僅限於提供「現股買進（現股做多）」與「現金部位配置」的穩健建議。
+7. 核心安全紅線 (CRITICAL SAFETY RULE)：主人 Akira 絕對不接受任何融資、融券、做空、開槓桿、或衍生性金融商品的交易建議。他傾向穩健，容許小賣小賠，但拒絕面臨破產風险。請在所有對話、分析報告與選股建議中，絕對不要提及或推薦融資、融券、做空、開槓桿等高風险交易，僅限於提供「現股買進（現股做多）」與「現金部位配置」的穩健建議。
 
 {lessons_ctx}
 
@@ -150,10 +177,12 @@ def get_system_instruction(selected_lang: str = "繁體中文", price_targets: d
 {price_ctx}
 
 {inst_ctx}
+
+{type_ctx}
 """
     return instruction
 
-def generate_advisor_response(chat_history: list, user_query: str, model_name: str = "gemini-2.5-flash", selected_lang: str = "繁體中文", price_targets: dict = None, institutional: dict = None) -> str:
+def generate_advisor_response(chat_history: list, user_query: str, model_name: str = "gemini-2.5-flash", selected_lang: str = "繁體中文", price_targets: dict = None, institutional: dict = None, stock_type: dict = None) -> str:
     """
     與理財專員對話（支援聯網搜尋與歷史紀錄）
     chat_history: 格式為 [{"role": "user"|"model", "text": "內容"}]
@@ -178,7 +207,7 @@ def generate_advisor_response(chat_history: list, user_query: str, model_name: s
         chat = client.chats.create(
             model=model_name,
             config=types.GenerateContentConfig(
-                system_instruction=get_system_instruction(selected_lang, price_targets=price_targets, institutional=institutional),
+                system_instruction=get_system_instruction(selected_lang, price_targets=price_targets, institutional=institutional, stock_type=stock_type),
                 tools=[{"google_search": {}}]
             ),
             history=contents_history
@@ -193,7 +222,7 @@ def generate_advisor_response(chat_history: list, user_query: str, model_name: s
             chat = client.chats.create(
                 model=model_name,
                 config=types.GenerateContentConfig(
-                    system_instruction=get_system_instruction(selected_lang, price_targets=price_targets, institutional=institutional)
+                    system_instruction=get_system_instruction(selected_lang, price_targets=price_targets, institutional=institutional, stock_type=stock_type)
                 ),
                 history=contents_history
             )

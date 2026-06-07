@@ -726,12 +726,21 @@ def evaluate_stock_signals(stock_id: str) -> dict:
     # 8. 三大法人五大規則分析
     inst_analysis = analyze_institutional_signals(institutional, metrics, df_ind)
     
+    # 9. 股票類型自動判定（額外資訊層，不影響以上任何分析邏輯）
+    stock_type: dict = {}
+    try:
+        from core.stock_classifier import classify_stock
+        stock_type = classify_stock(stock_id)
+    except Exception as e:
+        print(f"股票分類失敗（不影響主要分析）: {e}")
+    
     return {
-        "df":           df_ind,
-        "metrics":      metrics,
-        "signals":      all_signals,
+        "df":             df_ind,
+        "metrics":        metrics,
+        "signals":        all_signals,
         "recommendation": recommendation,
         "price_targets":  price_targets,
         "institutional":  institutional,
         "inst_analysis":  inst_analysis,
+        "stock_type":     stock_type,   # 新增：類型分析（額外層，不影響原有邏輯）
     }

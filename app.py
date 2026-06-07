@@ -1055,6 +1055,7 @@ recommendation = analysis.get("recommendation", None)
 price_targets = analysis.get("price_targets", {})
 institutional = analysis.get("institutional", {"available": False})
 inst_analysis  = analysis.get("inst_analysis",  {"available": False})
+stock_type     = analysis.get("stock_type",     {})   # 股票類型自動判定結果
 
 currency = LANG_DICT[selected_lang]["currency"]
 
@@ -1072,6 +1073,46 @@ tab_market, tab_portfolio, tab_chat, tab_news, tab_screener, tab_lessons = st.ta
 # TAB 1: 📊 即時看盤與型態偵測
 # ==============================================================================
 with tab_market:
+    # ── 方案 A：股票類型標籤 ────────────────────────────────────
+    if stock_type and stock_type.get("primary_type"):
+        pt = stock_type["primary_type"]
+        pc = stock_type.get("primary_confidence", 0)
+        st_s = stock_type.get("secondary_type")
+        sc   = stock_type.get("secondary_confidence", 0)
+        reasons_short = "・".join(stock_type.get("reason", [])[:3])
+
+        TYPE_COLORS = {
+            "AI": "#6366F1", "低軌衛星": "#0EA5E9", "軍工": "#EF4444",
+            "機器人": "#8B5CF6", "電動車": "#10B981", "ETF": "#F59E0B",
+            "權值股": "#F97316", "半導體": "#EC4899", "生技醫療": "#14B8A6",
+            "金融": "#84CC16", "Unknown": "#64748B",
+        }
+        p_color = TYPE_COLORS.get(pt, "#64748B")
+        s_color = TYPE_COLORS.get(st_s, "#64748B") if st_s else None
+
+        secondary_badge = ""
+        if st_s and sc >= 70:
+            secondary_badge = f"""
+                <span style="background:{s_color}22; color:{s_color}; border:1px solid {s_color}55;
+                             padding:4px 12px; border-radius:20px; font-size:0.78rem; font-weight:600;">
+                    副&nbsp;{st_s}&nbsp;{sc}%
+                </span>"""
+
+        st.markdown(f"""
+            <div class="glass-card" style="padding:12px 18px; margin-bottom:12px; display:flex;
+                         align-items:center; flex-wrap:wrap; gap:10px; border-left:3px solid {p_color};">
+                <span style="font-size:0.78rem; color:#94A3B8;">🏷 股票類型</span>
+                <span style="background:{p_color}; color:#fff; padding:4px 14px; border-radius:20px;
+                             font-size:0.85rem; font-weight:700;">
+                    主&nbsp;{pt}&nbsp;{pc}%
+                </span>
+                {secondary_badge}
+                <span style="font-size:0.75rem; color:#64748B; flex:1; min-width:160px;">
+                    {reasons_short}
+                </span>
+            </div>
+        """, unsafe_allow_html=True)
+
     # 頂部即時指標
     col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
     
@@ -1248,6 +1289,66 @@ with tab_market:
                     <div style="font-size:0.72rem; color:#64748B; margin-top:6px;">⚠️ {'以上價位為技術面計算之參考，非絕對保證，請自行判斷風險' if selected_lang=='繁體中文' else 'These are technical reference prices only. Always apply your own judgment.'}</div>
                 </div>
             """, unsafe_allow_html=True)
+
+        # ── 方案 I：類型專屬操作策略補充 ──────────────────────
+        if stock_type and stock_type.get("primary_type") and stock_type["primary_type"] != "Unknown":
+            _st_pt   = stock_type["primary_type"]
+            _st_tips = stock_type.get("operation_tips", [])
+            _st_sec  = stock_type.get("secondary_type")
+            _st_s_tips = stock_type.get("secondary_tips", [])
+
+            TYPE_COLORS_I = {
+                "AI": "#6366F1", "低軌衛星": "#0EA5E9", "軍工": "#EF4444",
+                "機器人": "#8B5CF6", "電動車": "#10B981", "ETF": "#F59E0B",
+                "權值股": "#F97316", "半導體": "#EC4899", "生技醫療": "#14B8A6",
+                "金融": "#84CC16",
+            }
+            _ic = TYPE_COLORS_I.get(_st_pt, "#6366F1")
+            tips_html = "".join([
+                f'<div style="padding:3px 0; font-size:0.82rem; color:#E2E8F0;">📍 {t}</div>'
+                for t in _st_tips
+            ])
+            sec_html = ""
+            if _st_sec and _st_s_tips:
+                _sc = TYPE_COLORS_I.get(_st_sec, "#94A3B8")
+                sec_tips_html = "".join([
+                    f'<div style="padding:2px 0; font-size:0.8rem; color:#CBD5E1;">　📎 {t}</div>'
+                    for t in _st_s_tips[:2]
+                ])
+                sec_html = f"""
+                    <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.06);">
+                        <span style="font-size:0.75rem; color:{_sc};">副類型 {_st_sec} 補充</span>
+                        {sec_tips_html}
+                    </div>"""
+
+            st.markdown(f"""
+                <div class="glass-card" style="padding:14px 18px; margin-bottom:10px;
+                             border-left:3px solid {_ic}; background:rgba(15,20,40,0.6);">
+                    <div style="font-size:0.8rem; color:{_ic}; font-weight:700; margin-bottom:6px;">
+                        🎯 {_st_pt} 類型操作策略
+                    </div>
+                    {tips_html}
+                    {sec_html}
+                </div>
+            """, unsafe_allow_html=True)
+
+        # ── 方案 D：類型專屬風險提示 ───────────────────────────
+        if stock_type and stock_type.get("primary_type") and stock_type["primary_type"] != "Unknown":
+            _st_risks = stock_type.get("risks", [])
+            if _st_risks:
+                risks_html = "".join([
+                    f'<div style="padding:3px 0; font-size:0.8rem; color:#FCA5A5;">⚠ {r}</div>'
+                    for r in _st_risks
+                ])
+                st.markdown(f"""
+                    <div class="glass-card" style="padding:12px 18px; margin-bottom:10px;
+                                 border-left:3px solid #EF4444; background:rgba(239,68,68,0.06);">
+                        <div style="font-size:0.8rem; color:#EF4444; font-weight:700; margin-bottom:5px;">
+                            🔔 {stock_type["primary_type"]} 類型特有風險
+                        </div>
+                        {risks_html}
+                    </div>
+                """, unsafe_allow_html=True)
 
         # 偵測形態輸出
         st.markdown(f"<div style='font-size: 0.9rem; font-weight: bold; color: #94A3B8; margin-bottom: 8px;'>{LANG_DICT[selected_lang]['tech_patterns']}</div>", unsafe_allow_html=True)
@@ -1591,7 +1692,8 @@ with tab_chat:
                 model_name=selected_model_name,
                 selected_lang=selected_lang,
                 price_targets=price_targets,
-                institutional=institutional
+                institutional=institutional,
+                stock_type=stock_type
             )
             
         # 顯示 AI 回覆
@@ -1618,7 +1720,8 @@ with tab_chat:
                     model_name=selected_model_name,
                     selected_lang=selected_lang,
                     price_targets=price_targets,
-                    institutional=institutional
+                    institutional=institutional,
+                    stock_type=stock_type
                 )
                 st.session_state.chat_history.append({"role": "model", "text": resp})
             st.rerun()
@@ -1635,7 +1738,8 @@ with tab_chat:
                     model_name=selected_model_name,
                     selected_lang=selected_lang,
                     price_targets=price_targets,
-                    institutional=institutional
+                    institutional=institutional,
+                    stock_type=stock_type
                 )
                 st.session_state.chat_history.append({"role": "model", "text": resp})
             st.rerun()
@@ -1652,7 +1756,8 @@ with tab_chat:
                     model_name=selected_model_name,
                     selected_lang=selected_lang,
                     price_targets=price_targets,
-                    institutional=institutional
+                    institutional=institutional,
+                    stock_type=stock_type
                 )
                 st.session_state.chat_history.append({"role": "model", "text": resp})
             st.rerun()
