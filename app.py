@@ -25,7 +25,7 @@ LANG_DICT = {
         "api_key_help": "您可以前往 Google AI Studio 免費申請。",
         "choose_brain": "🤖 選擇 AI 專員大腦",
         "model_label": "選擇 AI 大腦模型：",
-        "model_help": "Pro 模型邏輯推理能力最強，最適合分析財報與複雜投資鐵律；Flash 模型回覆速度極快。",
+        "model_help": "gemini-3.5-flash 模型速度與智慧最平衡；gemini-2.5-flash 模型回覆速度極快。",
         "search_title": "🔍 查詢新標的",
         "select_common": "選擇常用股票",
         "manual_input": "或手動輸入其他台股代號",
@@ -139,7 +139,7 @@ LANG_DICT = {
         "api_key_help": "You can get a free API Key at Google AI Studio.",
         "choose_brain": "🤖 Choose AI Advisor Brain",
         "model_label": "Select AI Brain Model:",
-        "model_help": "Pro model has the strongest reasoning (best for analysis); Flash is extremely fast.",
+        "model_help": "gemini-3.5-flash offers the best balance of speed and smartness; gemini-2.5-flash is extremely fast.",
         "search_title": "🔍 Search New Stock",
         "select_common": "Select Common Stock",
         "manual_input": "Or manually enter Taiwan stock code",
@@ -253,7 +253,7 @@ LANG_DICT = {
         "api_key_help": "Google AI Studio で無料の API キーを申請できます。",
         "choose_brain": "🤖 AIアドバイザーの脳を選択",
         "model_label": "AI大脳モデルを選択：",
-        "model_help": "Proモデルは論理推論能力が最も高く分析に最適です。Flashは応答が非常に高速です。",
+        "model_help": "gemini-3.5-flashは速度と知能のバランスが最適です。gemini-2.5-flashは応答が非常に高速です。",
         "search_title": "🔍 新規銘柄の検索",
         "select_common": "常用銘柄を選択",
         "manual_input": "または台湾株コードを手動入力",
@@ -367,7 +367,7 @@ LANG_DICT = {
         "api_key_help": "คุณสามารถขอรับ API Key ฟรีได้ที่ Google AI Studio",
         "choose_brain": "🤖 เลือกสมองของที่ปรึกษา AI",
         "model_label": "เลือกโมเดลสมอง AI:",
-        "model_help": "โมเดล Pro คิดวิเคราะห์เชิงลึกดีที่สุด โมเดล Flash ตอบสนองอย่างรวดเร็วมาก",
+        "model_help": "gemini-3.5-flash มีความเร็วและความฉลาดที่สมดุลที่สุด gemini-2.5-flash ตอบสนองอย่างรวดเร็วมาก",
         "search_title": "🔍 ค้นหาหุ้นใหม่",
         "select_common": "เลือกหุ้นที่ใช้บ่อย",
         "manual_input": "หรือป้อนรหัสหุ้นไต้หวันด้วยตนเอง",
@@ -481,7 +481,7 @@ LANG_DICT = {
         "api_key_help": "Bạn có thể đăng ký khóa API miễn phí tại Google AI Studio.",
         "choose_brain": "🤖 Chọn bộ não trợ lý AI",
         "model_label": "Chọn mô hình bộ não AI:",
-        "model_help": "Mô hình Pro có tư duy logic mạnh nhất; Flash phản hồi cực kỳ nhanh chóng.",
+        "model_help": "gemini-3.5-flash có sự cân bằng tốt nhất giữa tốc độ và trí tuệ; gemini-2.5-flash phản hồi cực kỳ nhanh chóng.",
         "search_title": "🔍 Tra cứu mã chứng khoán",
         "select_common": "Chọn mã cổ phiếu thông dụng",
         "manual_input": "Hoặc tự nhập mã cổ phiếu Đài Loan",
@@ -684,27 +684,22 @@ SIGNAL_TRANSLATION = {
 # --- 側邊欄大腦模型選項翻譯 ---
 model_descriptions = {
     "繁體中文": {
-        "pro": "🧠 gemini-2.5-pro (深度智囊 - 超強邏輯、深度分析首選)",
         "flash35": "🔥 gemini-3.5-flash (最新世代 - 速度與智慧的最新平衡)",
         "flash25": "🚀 gemini-2.5-flash (極速助手 - 快速對話與簡要新聞)"
     },
     "English": {
-        "pro": "🧠 gemini-2.5-pro (Deep Advisor - Strongest Logic, Financials & Rules)",
         "flash35": "🔥 gemini-3.5-flash (Next Gen - Balance of Speed & Smartness)",
         "flash25": "🚀 gemini-2.5-flash (Fast Assistant - Speedy Chat & Summaries)"
     },
     "日本語": {
-        "pro": "🧠 gemini-2.5-pro (深度知能 - 最強の論理・財務分析推奨)",
         "flash35": "🔥 gemini-3.5-flash (新世代 - 速度と知能の最新バランス)",
         "flash25": "🚀 gemini-2.5-flash (高速助手 - クイック対話・要約用)"
     },
     "ไทย": {
-        "pro": "🧠 gemini-2.5-pro (ที่ปรึกษาเชิงลึก - ตรรกะแกร่งที่สุด วิเคราะห์การเงิน)",
         "flash35": "🔥 gemini-3.5-flash (รุ่นล่าสุด - ความเร็วและความฉลาดที่สมดุล)",
         "flash25": "🚀 gemini-2.5-flash (ผู้ช่วยด่วน - แชทเร็วและสรุปข่าว)"
     },
     "Tiếng Việt": {
-        "pro": "🧠 gemini-2.5-pro (Trí tuệ chuyên sâu - Logic mạnh nhất, phân tích tài chính)",
         "flash35": "🔥 gemini-3.5-flash (Thế hệ mới - Cân bằng tốc độ & thông minh)",
         "flash25": "🚀 gemini-2.5-flash (Trợ lý siêu tốc - Chat nhanh & tóm tắt tin tức)"
     }
@@ -1000,7 +995,6 @@ with st.sidebar:
         
     st.markdown(f"### {LANG_DICT[selected_lang]['choose_brain']}")
     model_options = {
-        model_descriptions[selected_lang]["pro"]: "gemini-2.5-pro",
         model_descriptions[selected_lang]["flash35"]: "gemini-3.5-flash",
         model_descriptions[selected_lang]["flash25"]: "gemini-2.5-flash"
     }
