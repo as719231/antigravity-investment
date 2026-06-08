@@ -1073,65 +1073,39 @@ def draw_realtime_card(stock_id: str, price_targets: dict, selected_lang: str, a
     
     status_alert = ""
     if buy_ideal and price <= buy_ideal:
-        status_alert = f"""
-            <div style="background:rgba(239,68,68,0.1); color:#EF4444; border:1px solid #EF444433; 
-                        padding:8px 12px; border-radius:6px; font-size:0.82rem; font-weight:600; text-align:center; margin-top:10px;">
-                {REALTIME_DICT[selected_lang]["near_buy_target"]}
-            </div>
-        """
+        status_alert = f'<div style="background:rgba(239,68,68,0.1); color:#EF4444; border:1px solid #EF444433; padding:8px 12px; border-radius:6px; font-size:0.82rem; font-weight:600; text-align:center; margin-top:10px;">{REALTIME_DICT[selected_lang]["near_buy_target"]}</div>'
     elif sell_ideal and price >= sell_ideal:
-        status_alert = f"""
-            <div style="background:rgba(245,158,11,0.1); color:#F59E0B; border:1px solid #F59E0B33; 
-                        padding:8px 12px; border-radius:6px; font-size:0.82rem; font-weight:600; text-align:center; margin-top:10px;">
-                {REALTIME_DICT[selected_lang]["near_sell_target"]}
-            </div>
-        """
+        status_alert = f'<div style="background:rgba(245,158,11,0.1); color:#F59E0B; border:1px solid #F59E0B33; padding:8px 12px; border-radius:6px; font-size:0.82rem; font-weight:600; text-align:center; margin-top:10px;">{REALTIME_DICT[selected_lang]["near_sell_target"]}</div>'
         
     buy_desc = f"{buy_ideal} 元" if buy_ideal else "--"
     sell_desc = f"{sell_ideal} 元" if sell_ideal else "--"
     
-    st.markdown(f"""
-        <div class="glass-card" style="padding:16px 20px; margin-bottom:16px; 
-                     background: linear-gradient(135deg, rgba(20,25,50,0.8) 0%, rgba(10,12,30,0.9) 100%); 
-                     border-left: 4px solid {color};">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                <div>
-                    <div style="font-size:0.8rem; color:#94A3B8; font-weight:600;">
-                        {REALTIME_DICT[selected_lang]["realtime_title"]} - {symbol}
-                    </div>
-                    <div style="display:flex; align-items:baseline; gap:12px; margin-top:4px;">
-                        <span style="font-size:2.0rem; font-weight:800; color:#F8FAFC; font-family: monospace; line-height:1;">
-                            {price:,.2f}
-                        </span>
-                        <span style="font-size:1.1rem; font-weight:700; color:{color}; font-family: monospace;">
-                            {sign}{change:+.2f} ({sign}{change_pct:+.2f}%)
-                        </span>
-                    </div>
-                </div>
-                <div style="display:flex; gap:15px; text-align:right;">
-                    <div>
-                        <div style="font-size:0.72rem; color:#64748B;">{REALTIME_DICT[selected_lang]["prev_close"]}</div>
-                        <div style="font-size:0.95rem; font-weight:600; color:#CBD5E1; font-family: monospace;">
-                            {rt["prev_close"]:,.2f}
-                        </div>
-                    </div>
-                    <div>
-                        <div style="font-size:0.72rem; color:#64748B;">支撐位 (買進參考)</div>
-                        <div style="font-size:0.95rem; font-weight:600; color:#10B981; font-family: monospace;">
-                            {buy_desc}
-                        </div>
-                    </div>
-                    <div>
-                        <div style="font-size:0.72rem; color:#64748B;">壓力位 (賣出參考)</div>
-                        <div style="font-size:0.95rem; font-weight:600; color:#EF4444; font-family: monospace;">
-                            {sell_desc}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {status_alert}
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"""<div class="glass-card" style="padding:16px 20px; margin-bottom:16px; background: linear-gradient(135deg, rgba(20,25,50,0.8) 0%, rgba(10,12,30,0.9) 100%); border-left: 4px solid {color};">
+<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+<div>
+<div style="font-size:0.8rem; color:#94A3B8; font-weight:600;">{REALTIME_DICT[selected_lang]["realtime_title"]} - {symbol}</div>
+<div style="display:flex; align-items:baseline; gap:12px; margin-top:4px;">
+<span style="font-size:2.0rem; font-weight:800; color:#F8FAFC; font-family: monospace; line-height:1;">{price:,.2f}</span>
+<span style="font-size:1.1rem; font-weight:700; color:{color}; font-family: monospace;">{sign}{change:+.2f} ({sign}{change_pct:+.2f}%)</span>
+</div>
+</div>
+<div style="display:flex; gap:15px; text-align:right;">
+<div>
+<div style="font-size:0.72rem; color:#64748B;">{REALTIME_DICT[selected_lang]["prev_close"]}</div>
+<div style="font-size:0.95rem; font-weight:600; color:#CBD5E1; font-family: monospace;">{rt["prev_close"]:,.2f}</div>
+</div>
+<div>
+<div style="font-size:0.72rem; color:#64748B;">支撐位 (買進參考)</div>
+<div style="font-size:0.95rem; font-weight:600; color:#10B981; font-family: monospace;">{buy_desc}</div>
+</div>
+<div>
+<div style="font-size:0.72rem; color:#64748B;">壓力位 (賣出參考)</div>
+<div style="font-size:0.95rem; font-weight:600; color:#EF4444; font-family: monospace;">{sell_desc}</div>
+</div>
+</div>
+</div>
+{status_alert}
+</div>""", unsafe_allow_html=True)
     
     if not auto_refresh:
         col1, col2 = st.columns([1, 4])
@@ -1305,26 +1279,9 @@ with tab_market:
 
         secondary_badge = ""
         if st_s and sc >= 70:
-            secondary_badge = f"""
-                <span style="background:{s_color}22; color:{s_color}; border:1px solid {s_color}55;
-                             padding:4px 12px; border-radius:20px; font-size:0.78rem; font-weight:600;">
-                    副&nbsp;{st_s}&nbsp;{sc}%
-                </span>"""
+            secondary_badge = f'<span style="background:{s_color}22; color:{s_color}; border:1px solid {s_color}55; padding:4px 12px; border-radius:20px; font-size:0.78rem; font-weight:600;">副&nbsp;{st_s}&nbsp;{sc}%</span>'
 
-        st.markdown(f"""
-            <div class="glass-card" style="padding:12px 18px; margin-bottom:12px; display:flex;
-                         align-items:center; flex-wrap:wrap; gap:10px; border-left:3px solid {p_color};">
-                <span style="font-size:0.78rem; color:#94A3B8;">🏷 股票類型</span>
-                <span style="background:{p_color}; color:#fff; padding:4px 14px; border-radius:20px;
-                             font-size:0.85rem; font-weight:700;">
-                    主&nbsp;{pt}&nbsp;{pc}%
-                </span>
-                {secondary_badge}
-                <span style="font-size:0.75rem; color:#64748B; flex:1; min-width:160px;">
-                    {reasons_short}
-                </span>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f'<div class="glass-card" style="padding:12px 18px; margin-bottom:12px; display:flex; align-items:center; flex-wrap:wrap; gap:10px; border-left:3px solid {p_color};"><span style="font-size:0.78rem; color:#94A3B8;">🏷 股票類型</span><span style="background:{p_color}; color:#fff; padding:4px 14px; border-radius:20px; font-size:0.85rem; font-weight:700;">主&nbsp;{pt}&nbsp;{pc}%</span>{secondary_badge}<span style="font-size:0.75rem; color:#64748B; flex:1; min-width:160px;">{reasons_short}</span></div>', unsafe_allow_html=True)
 
     # 頂部即時指標
     col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)

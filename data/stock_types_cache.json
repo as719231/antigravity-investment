@@ -183,5 +183,39 @@
       "secondary_risks": [],
       "secondary_tips": []
     }
+  },
+  "0050": {
+    "cached_at": "2026-06-08T09:45:31.977453",
+    "result": {
+      "stock_id": "0050",
+      "company_name": "元大台灣50",
+      "primary_type": "ETF",
+      "primary_confidence": 100,
+      "secondary_type": null,
+      "secondary_confidence": 0,
+      "model_blend": {
+        "primary_weight": 1.0,
+        "secondary_weight": 0.0
+      },
+      "reason": [
+        "產業分類：ETF",
+        "包含關鍵字：ETF",
+        "包含關鍵字：台灣50"
+      ],
+      "market_cap_b": 0.0,
+      "risks": [
+        "折溢價風險：市場恐慌時可能出現折價",
+        "成分股集中風險：單一成分股比重過高時利空影響大",
+        "建議定期定額，不追高殺低"
+      ],
+      "operation_tips": [
+        "策略：定期定額優於追高殺低",
+        "目標報酬：年化 8~10% 為基準",
+        "配置比例：建議佔總投資組合 30~50%",
+        "注意：高股息 ETF 除息日前後觀察填息速度"
+      ],
+      "secondary_risks": [],
+      "secondary_tips": []
+    }
   }
 }
