@@ -732,7 +732,10 @@ REALTIME_DICT = {
         "delete_btn": "🗑️ 刪除此代號持股",
         "success_msg": "庫存持股已更新！",
         "delete_success_msg": "已成功刪除該持股！",
-        "error_empty_id": "請輸入有效的股票代號！"
+        "error_empty_id": "請輸入有效的股票代號！",
+        "op_type_label": "🔄 寫入模式",
+        "op_accumulate": "加碼累加 (自動計算加權平均成本)",
+        "op_overwrite": "直接覆蓋 (取代舊有股數與成本)"
     },
     "English": {
         "clear_cache_btn": "🔄 Force Refresh History",
@@ -756,7 +759,10 @@ REALTIME_DICT = {
         "delete_btn": "🗑️ Delete Ticker",
         "success_msg": "Portfolio updated!",
         "delete_success_msg": "Holding deleted!",
-        "error_empty_id": "Please enter a valid stock ticker!"
+        "error_empty_id": "Please enter a valid stock ticker!",
+        "op_type_label": "🔄 Write Mode",
+        "op_accumulate": "Accumulate (Auto-calculate weighted avg cost)",
+        "op_overwrite": "Overwrite (Directly replace existing data)"
     },
     "日本語": {
         "clear_cache_btn": "🔄 履歴データを強制更新",
@@ -780,7 +786,10 @@ REALTIME_DICT = {
         "delete_btn": "🗑️ 削除",
         "success_msg": "ポートフォリオを更新しました！",
         "delete_success_msg": "保有銘柄を削除しました！",
-        "error_empty_id": "有効な銘柄コードを入力してください！"
+        "error_empty_id": "有効な銘柄コードを入力してください！",
+        "op_type_label": "🔄 書き込みモード",
+        "op_accumulate": "買い増し累計 (加重平均コストを自動計算)",
+        "op_overwrite": "上書き (既存の株数と単価を直接置換)"
     },
     "ไทย": {
         "clear_cache_btn": "🔄 บังคับรีเฟรชข้อมูลประวัติ",
@@ -804,7 +813,10 @@ REALTIME_DICT = {
         "delete_btn": "🗑️ ลบหุ้นนี้",
         "success_msg": "อัปเดตพอร์ตสำเร็จ!",
         "delete_success_msg": "ลบหุ้นสำเร็จ!",
-        "error_empty_id": "กรุณากรอกรหัสหุ้นที่ถูกต้อง!"
+        "error_empty_id": "กรุณากรอกรหัสหุ้นที่ถูกต้อง!",
+        "op_type_label": "🔄 โหมดการบันทึก",
+        "op_accumulate": "ซื้อเพิ่มสะสม (คำนวณราคาเฉลี่ยถ่วงน้ำหนักอัตโนมัติ)",
+        "op_overwrite": "เขียนทับ (แทนที่จำนวนหุ้นและราคาซื้อเดิม)"
     },
     "Tiếng Việt": {
         "clear_cache_btn": "🔄 Buộc làm mới dữ liệu lịch sử",
@@ -828,7 +840,10 @@ REALTIME_DICT = {
         "delete_btn": "🗑️ Xóa mã cổ phiếu này",
         "success_msg": "Danh mục đầu tư đã được cập nhật!",
         "delete_success_msg": "Đã xóa mã cổ phiếu!",
-        "error_empty_id": "Vui lòng nhập mã cổ phiếu hợp lệ!"
+        "error_empty_id": "Vui lòng nhập mã cổ phiếu hợp lệ!",
+        "op_type_label": "🔄 Chế độ ghi",
+        "op_accumulate": "Tích lũy mua thêm (Tự động tính giá trung bình có trọng số)",
+        "op_overwrite": "Ghi đè (Thay thế trực tiếp số lượng và giá vốn cũ)"
     }
 }
 
@@ -1893,6 +1908,13 @@ with tab_portfolio:
     with edit_col4:
         edit_cost = st.number_input(REALTIME_DICT[selected_lang]['cost_label'], min_value=0.01, step=0.01, value=100.0, key="p_edit_cost")
         
+    write_mode = st.radio(
+        REALTIME_DICT[selected_lang]["op_type_label"],
+        [REALTIME_DICT[selected_lang]["op_accumulate"], REALTIME_DICT[selected_lang]["op_overwrite"]],
+        index=0,
+        horizontal=True
+    )
+    
     btn_col1, btn_col2, _ = st.columns([1, 1, 2])
     with btn_col1:
         if st.button(REALTIME_DICT[selected_lang]['add_update_btn'], use_container_width=True, type="primary"):
@@ -1906,12 +1928,30 @@ with tab_portfolio:
                     except Exception:
                         pass
                 
-                name_to_use = edit_name.strip() if edit_name.strip() else edit_id.strip()
-                curr_p[edit_id.strip()] = {
-                    "name": name_to_use,
-                    "shares": int(edit_shares),
-                    "cost": float(edit_cost)
-                }
+                stock_key = edit_id.strip()
+                if stock_key in curr_p and write_mode == REALTIME_DICT[selected_lang]["op_accumulate"]:
+                    old_shares = curr_p[stock_key]["shares"]
+                    old_cost = curr_p[stock_key]["cost"]
+                    new_shares = int(edit_shares)
+                    new_cost = float(edit_cost)
+                    
+                    total_shares = old_shares + new_shares
+                    total_cost = (old_shares * old_cost) + (new_shares * new_cost)
+                    weighted_avg_cost = total_cost / total_shares if total_shares > 0 else 0.0
+                    
+                    name_to_use = edit_name.strip() if edit_name.strip() else curr_p[stock_key]["name"]
+                    curr_p[stock_key] = {
+                        "name": name_to_use,
+                        "shares": total_shares,
+                        "cost": round(weighted_avg_cost, 4)
+                    }
+                else:
+                    name_to_use = edit_name.strip() if edit_name.strip() else edit_id.strip()
+                    curr_p[stock_key] = {
+                        "name": name_to_use,
+                        "shares": int(edit_shares),
+                        "cost": float(edit_cost)
+                    }
                 
                 with open(p_file, "w", encoding="utf-8") as f:
                     json.dump(curr_p, f, indent=4, ensure_ascii=False)
