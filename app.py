@@ -710,7 +710,11 @@ model_descriptions = {
 REALTIME_DICT = {
     "繁體中文": {
         "clear_cache_btn": "🔄 強制刷新歷史數據",
-        "auto_refresh_label": "⏱ 啟動盤中即時行情自動更新 (30秒)",
+        "auto_refresh_label": "⏱ 啟動盤中即時行情自動更新",
+        "refresh_interval_label": "⏱ 選擇自動更新頻率",
+        "interval_10s": "10 秒 (快速)",
+        "interval_30s": "30 秒 (標準)",
+        "interval_60s": "60 秒 (省流量)",
         "realtime_title": "⚡ 盤中即時行情 (Yahoo)",
         "prev_close": "昨收",
         "near_buy_target": "🔥 已跌破或到達第一批買進價！",
@@ -720,7 +724,11 @@ REALTIME_DICT = {
     },
     "English": {
         "clear_cache_btn": "🔄 Force Refresh History",
-        "auto_refresh_label": "⏱ Enable Intraday Auto-Refresh (30s)",
+        "auto_refresh_label": "⏱ Enable Intraday Auto-Refresh",
+        "refresh_interval_label": "⏱ Select Auto-Refresh Interval",
+        "interval_10s": "10 seconds (Fast)",
+        "interval_30s": "30 seconds (Standard)",
+        "interval_60s": "60 seconds (Eco)",
         "realtime_title": "⚡ Intraday Real-time Quote (Yahoo)",
         "prev_close": "Prev Close",
         "near_buy_target": "🔥 Price reached buy target!",
@@ -730,7 +738,11 @@ REALTIME_DICT = {
     },
     "日本語": {
         "clear_cache_btn": "🔄 履歴データを強制更新",
-        "auto_refresh_label": "⏱ 盤中気配値自動更新を有効化 (30秒)",
+        "auto_refresh_label": "⏱ 盤中気配値自動更新を有効化",
+        "refresh_interval_label": "⏱ 更新間隔を選択",
+        "interval_10s": "10秒 (高速)",
+        "interval_30s": "30秒 (標準)",
+        "interval_60s": "60秒 (省流量)",
         "realtime_title": "⚡ リアルタイム気配値 (Yahoo)",
         "prev_close": "前日終値",
         "near_buy_target": "🔥 買い参考エリアに到達！",
@@ -740,7 +752,11 @@ REALTIME_DICT = {
     },
     "ไทย": {
         "clear_cache_btn": "🔄 บังคับรีเฟรชข้อมูลประวัติ",
-        "auto_refresh_label": "⏱ เปิดอัปเดตราคาเรียลไทม์ (30 วินาที)",
+        "auto_refresh_label": "⏱ เปิดอัปเดતราคาเรียลไทม์",
+        "refresh_interval_label": "⏱ เลือกช่วงเวลาการอัปเดต",
+        "interval_10s": "10 วินาที (เร็ว)",
+        "interval_30s": "30 วินาที (มาตรฐาน)",
+        "interval_60s": "60 วินาที (ประหยัด)",
         "realtime_title": "⚡ ราคาเรียลไทม์ (Yahoo)",
         "prev_close": "ปิดวันก่อน",
         "near_buy_target": "🔥 ราคาถึงเป้าหมายการซื้อแล้ว!",
@@ -750,7 +766,11 @@ REALTIME_DICT = {
     },
     "Tiếng Việt": {
         "clear_cache_btn": "🔄 Buộc làm mới dữ liệu lịch sử",
-        "auto_refresh_label": "⏱ Bật tự động cập nhật giá (30 giây)",
+        "auto_refresh_label": "⏱ Bật tự động cập nhật giá",
+        "refresh_interval_label": "⏱ Chọn khoảng thời gian cập nhật",
+        "interval_10s": "10 giây (Nhanh)",
+        "interval_30s": "30 giây (Chuẩn)",
+        "interval_60s": "60 giây (Tiết kiệm)",
         "realtime_title": "⚡ Giá trực tuyến (Yahoo)",
         "prev_close": "Đóng cửa trước",
         "near_buy_target": "🔥 Giá đã đạt mức hỗ trợ mua!",
@@ -1119,8 +1139,16 @@ def draw_realtime_card(stock_id: str, price_targets: dict, selected_lang: str, a
             if st.button("🔄 刷新即時報價", key="btn_manual_refresh_quote", use_container_width=True):
                 st.rerun()
 
+@st.fragment(run_every=10)
+def render_realtime_quote_10s(stock_id: str, price_targets: dict, selected_lang: str):
+    draw_realtime_card(stock_id, price_targets, selected_lang, auto_refresh=True)
+
 @st.fragment(run_every=30)
-def render_realtime_quote_auto(stock_id: str, price_targets: dict, selected_lang: str):
+def render_realtime_quote_30s(stock_id: str, price_targets: dict, selected_lang: str):
+    draw_realtime_card(stock_id, price_targets, selected_lang, auto_refresh=True)
+
+@st.fragment(run_every=60)
+def render_realtime_quote_60s(stock_id: str, price_targets: dict, selected_lang: str):
     draw_realtime_card(stock_id, price_targets, selected_lang, auto_refresh=True)
 
 @st.fragment()
@@ -1171,6 +1199,19 @@ with st.sidebar:
         REALTIME_DICT[selected_lang]["auto_refresh_label"],
         value=True
     )
+    refresh_interval = 30
+    if auto_refresh:
+        interval_options = {
+            REALTIME_DICT[selected_lang]["interval_10s"]: 10,
+            REALTIME_DICT[selected_lang]["interval_30s"]: 30,
+            REALTIME_DICT[selected_lang]["interval_60s"]: 60
+        }
+        selected_interval_label = st.selectbox(
+            REALTIME_DICT[selected_lang]["refresh_interval_label"],
+            list(interval_options.keys()),
+            index=1
+        )
+        refresh_interval = interval_options[selected_interval_label]
     
     st.markdown("---")
     
@@ -1236,7 +1277,12 @@ tab_market, tab_portfolio, tab_chat, tab_news, tab_screener, tab_lessons = st.ta
 with tab_market:
     # ── 盤中即時行情 ──────────────────────────────────────────
     if auto_refresh:
-        render_realtime_quote_auto(stock_id_input, price_targets, selected_lang)
+        if refresh_interval == 10:
+            render_realtime_quote_10s(stock_id_input, price_targets, selected_lang)
+        elif refresh_interval == 60:
+            render_realtime_quote_60s(stock_id_input, price_targets, selected_lang)
+        else:
+            render_realtime_quote_30s(stock_id_input, price_targets, selected_lang)
     else:
         render_realtime_quote_manual(stock_id_input, price_targets, selected_lang)
 
