@@ -10,8 +10,10 @@ import config
 import importlib
 import core.pattern_detector
 import core.ai_agent
+import core.realtime_provider
 importlib.reload(core.pattern_detector)
 importlib.reload(core.ai_agent)
+importlib.reload(core.realtime_provider)
 from core.pattern_detector import evaluate_stock_signals, fetch_stock_data
 from core.ai_agent import generate_advisor_response, get_stock_news_briefing, get_ai_stock_recommendations
 from core.realtime_provider import fetch_realtime_price
