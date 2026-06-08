@@ -722,7 +722,17 @@ REALTIME_DICT = {
         "near_buy_target": "🔥 已跌破或到達第一批買進價！",
         "near_sell_target": "⚠️ 已突破或到達壓力賣出價！",
         "normal_status": "盤中價格波動中",
-        "refresh_success": "歷史數據快取已清除！"
+        "refresh_success": "歷史數據快取已清除！",
+        "edit_title": "🛠️ 編輯個人庫存持股",
+        "stock_code_label": "股票代號",
+        "stock_name_label": "股票名稱",
+        "shares_label": "持有股數",
+        "cost_label": "平均買入價 (元)",
+        "add_update_btn": "➕ 新增或更新持股",
+        "delete_btn": "🗑️ 刪除此代號持股",
+        "success_msg": "庫存持股已更新！",
+        "delete_success_msg": "已成功刪除該持股！",
+        "error_empty_id": "請輸入有效的股票代號！"
     },
     "English": {
         "clear_cache_btn": "🔄 Force Refresh History",
@@ -736,7 +746,17 @@ REALTIME_DICT = {
         "near_buy_target": "🔥 Price reached buy target!",
         "near_sell_target": "⚠️ Price reached resistance target!",
         "normal_status": "Intraday trading active",
-        "refresh_success": "Historical cache cleared!"
+        "refresh_success": "Historical cache cleared!",
+        "edit_title": "🛠️ Edit Personal Portfolio Holdings",
+        "stock_code_label": "Stock Ticker",
+        "stock_name_label": "Stock Name",
+        "shares_label": "Shares Owned",
+        "cost_label": "Average Cost",
+        "add_update_btn": "➕ Add or Update Holding",
+        "delete_btn": "🗑️ Delete Ticker",
+        "success_msg": "Portfolio updated!",
+        "delete_success_msg": "Holding deleted!",
+        "error_empty_id": "Please enter a valid stock ticker!"
     },
     "日本語": {
         "clear_cache_btn": "🔄 履歴データを強制更新",
@@ -750,7 +770,17 @@ REALTIME_DICT = {
         "near_buy_target": "🔥 買い参考エリアに到達！",
         "near_sell_target": "⚠️ 売り参考エリアに到達！",
         "normal_status": "日中取引中",
-        "refresh_success": "履歴データキャッシュがクリアされました！"
+        "refresh_success": "履歴データキャッシュがクリアされました！",
+        "edit_title": "🛠️ ポートフォリオの編集",
+        "stock_code_label": "銘柄コード",
+        "stock_name_label": "銘柄名",
+        "shares_label": "保有株数",
+        "cost_label": "平均取得単価",
+        "add_update_btn": "➕ 追加・更新",
+        "delete_btn": "🗑️ 削除",
+        "success_msg": "ポートフォリオを更新しました！",
+        "delete_success_msg": "保有銘柄を削除しました！",
+        "error_empty_id": "有効な銘柄コードを入力してください！"
     },
     "ไทย": {
         "clear_cache_btn": "🔄 บังคับรีเฟรชข้อมูลประวัติ",
@@ -764,7 +794,17 @@ REALTIME_DICT = {
         "near_buy_target": "🔥 ราคาถึงเป้าหมายการซื้อแล้ว!",
         "near_sell_target": "⚠️ ราคาถึงแนวต้านแล้ว!",
         "normal_status": "กำลังซื้อขายระหว่างวัน",
-        "refresh_success": "ล้างแคชข้อมูลประวัติแล้ว!"
+        "refresh_success": "ล้างแคชข้อมูลประวัติแล้ว!",
+        "edit_title": "🛠️ แก้ไขพอร์ตการลงทุนส่วนตัว",
+        "stock_code_label": "รหัสหุ้น",
+        "stock_name_label": "ชื่อหุ้น",
+        "shares_label": "จำนวนหุ้นที่ถือ",
+        "cost_label": "ราคาซื้อเฉลี่ย",
+        "add_update_btn": "➕ เพิ่มหรืออัปเดตหุ้น",
+        "delete_btn": "🗑️ ลบหุ้นนี้",
+        "success_msg": "อัปเดตพอร์ตสำเร็จ!",
+        "delete_success_msg": "ลบหุ้นสำเร็จ!",
+        "error_empty_id": "กรุณากรอกรหัสหุ้นที่ถูกต้อง!"
     },
     "Tiếng Việt": {
         "clear_cache_btn": "🔄 Buộc làm mới dữ liệu lịch sử",
@@ -778,7 +818,17 @@ REALTIME_DICT = {
         "near_buy_target": "🔥 Giá đã đạt mức hỗ trợ mua!",
         "near_sell_target": "⚠️ Giá đã đạt mức kháng cự bán!",
         "normal_status": "Đang giao dịch trực tuyến",
-        "refresh_success": "Đã xóa bộ nhớ đệm lịch sử!"
+        "refresh_success": "Đã xóa bộ nhớ đệm lịch sử!",
+        "edit_title": "🛠️ Chỉnh sửa danh mục đầu tư cá nhân",
+        "stock_code_label": "Mã cổ phiếu",
+        "stock_name_label": "Tên cổ phiếu",
+        "shares_label": "Số lượng sở hữu",
+        "cost_label": "Giá mua trung bình",
+        "add_update_btn": "➕ Thêm hoặc cập nhật",
+        "delete_btn": "🗑️ Xóa mã cổ phiếu này",
+        "success_msg": "Danh mục đầu tư đã được cập nhật!",
+        "delete_success_msg": "Đã xóa mã cổ phiếu!",
+        "error_empty_id": "Vui lòng nhập mã cổ phiếu hợp lệ!"
     }
 }
 
@@ -1828,6 +1878,69 @@ with tab_portfolio:
         
     else:
         st.info("尚未建立持股 portfolio.json 檔案。")
+
+    # ── 🛠️ 編輯個人庫存持股 UI ──────────────────────────────────────
+    st.markdown("---")
+    st.markdown(f"<h4 style='color:#F8FAFC;'>{REALTIME_DICT[selected_lang]['edit_title']}</h4>", unsafe_allow_html=True)
+    
+    edit_col1, edit_col2, edit_col3, edit_col4 = st.columns(4)
+    with edit_col1:
+        edit_id = st.text_input(f"{REALTIME_DICT[selected_lang]['stock_code_label']} (e.g. 0050)", key="p_edit_id")
+    with edit_col2:
+        edit_name = st.text_input(f"{REALTIME_DICT[selected_lang]['stock_name_label']} (e.g. 台積電)", key="p_edit_name")
+    with edit_col3:
+        edit_shares = st.number_input(REALTIME_DICT[selected_lang]['shares_label'], min_value=1, step=1, value=1000, key="p_edit_shares")
+    with edit_col4:
+        edit_cost = st.number_input(REALTIME_DICT[selected_lang]['cost_label'], min_value=0.01, step=0.01, value=100.0, key="p_edit_cost")
+        
+    btn_col1, btn_col2, _ = st.columns([1, 1, 2])
+    with btn_col1:
+        if st.button(REALTIME_DICT[selected_lang]['add_update_btn'], use_container_width=True, type="primary"):
+            if edit_id.strip():
+                p_file = config.PORTFOLIO_FILE
+                curr_p = {}
+                if os.path.exists(p_file):
+                    try:
+                        with open(p_file, "r", encoding="utf-8") as f:
+                            curr_p = json.load(f)
+                    except Exception:
+                        pass
+                
+                name_to_use = edit_name.strip() if edit_name.strip() else edit_id.strip()
+                curr_p[edit_id.strip()] = {
+                    "name": name_to_use,
+                    "shares": int(edit_shares),
+                    "cost": float(edit_cost)
+                }
+                
+                with open(p_file, "w", encoding="utf-8") as f:
+                    json.dump(curr_p, f, indent=4, ensure_ascii=False)
+                    
+                st.toast(REALTIME_DICT[selected_lang]['success_msg'], icon="✅")
+                st.rerun()
+            else:
+                st.error(REALTIME_DICT[selected_lang]['error_empty_id'])
+                
+    with btn_col2:
+        if st.button(REALTIME_DICT[selected_lang]['delete_btn'], use_container_width=True):
+            if edit_id.strip():
+                p_file = config.PORTFOLIO_FILE
+                curr_p = {}
+                if os.path.exists(p_file):
+                    try:
+                        with open(p_file, "r", encoding="utf-8") as f:
+                            curr_p = json.load(f)
+                    except Exception:
+                        pass
+                
+                if edit_id.strip() in curr_p:
+                    curr_p.pop(edit_id.strip())
+                    with open(p_file, "w", encoding="utf-8") as f:
+                        json.dump(curr_p, f, indent=4, ensure_ascii=False)
+                    st.toast(REALTIME_DICT[selected_lang]['delete_success_msg'], icon="🗑️")
+                    st.rerun()
+            else:
+                st.error(REALTIME_DICT[selected_lang]['error_empty_id'])
 
 # ==============================================================================
 # TAB 3: 💬 理財專員對話室
