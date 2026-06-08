@@ -14,6 +14,7 @@ importlib.reload(core.pattern_detector)
 importlib.reload(core.ai_agent)
 from core.pattern_detector import evaluate_stock_signals, fetch_stock_data
 from core.ai_agent import generate_advisor_response, get_stock_news_briefing, get_ai_stock_recommendations
+from core.realtime_provider import fetch_realtime_price
 
 # --- 多語言翻譯字典 ---
 LANG_DICT = {
@@ -705,6 +706,60 @@ model_descriptions = {
     }
 }
 
+# --- 盤中即時行情翻譯字典 ---
+REALTIME_DICT = {
+    "繁體中文": {
+        "clear_cache_btn": "🔄 強制刷新歷史數據",
+        "auto_refresh_label": "⏱ 啟動盤中即時行情自動更新 (30秒)",
+        "realtime_title": "⚡ 盤中即時行情 (Yahoo)",
+        "prev_close": "昨收",
+        "near_buy_target": "🔥 已跌破或到達第一批買進價！",
+        "near_sell_target": "⚠️ 已突破或到達壓力賣出價！",
+        "normal_status": "盤中價格波動中",
+        "refresh_success": "歷史數據快取已清除！"
+    },
+    "English": {
+        "clear_cache_btn": "🔄 Force Refresh History",
+        "auto_refresh_label": "⏱ Enable Intraday Auto-Refresh (30s)",
+        "realtime_title": "⚡ Intraday Real-time Quote (Yahoo)",
+        "prev_close": "Prev Close",
+        "near_buy_target": "🔥 Price reached buy target!",
+        "near_sell_target": "⚠️ Price reached resistance target!",
+        "normal_status": "Intraday trading active",
+        "refresh_success": "Historical cache cleared!"
+    },
+    "日本語": {
+        "clear_cache_btn": "🔄 履歴データを強制更新",
+        "auto_refresh_label": "⏱ 盤中気配値自動更新を有効化 (30秒)",
+        "realtime_title": "⚡ リアルタイム気配値 (Yahoo)",
+        "prev_close": "前日終値",
+        "near_buy_target": "🔥 買い参考エリアに到達！",
+        "near_sell_target": "⚠️ 売り参考エリアに到達！",
+        "normal_status": "日中取引中",
+        "refresh_success": "履歴データキャッシュがクリアされました！"
+    },
+    "ไทย": {
+        "clear_cache_btn": "🔄 บังคับรีเฟรชข้อมูลประวัติ",
+        "auto_refresh_label": "⏱ เปิดอัปเดตราคาเรียลไทม์ (30 วินาที)",
+        "realtime_title": "⚡ ราคาเรียลไทม์ (Yahoo)",
+        "prev_close": "ปิดวันก่อน",
+        "near_buy_target": "🔥 ราคาถึงเป้าหมายการซื้อแล้ว!",
+        "near_sell_target": "⚠️ ราคาถึงแนวต้านแล้ว!",
+        "normal_status": "กำลังซื้อขายระหว่างวัน",
+        "refresh_success": "ล้างแคชข้อมูลประวัติแล้ว!"
+    },
+    "Tiếng Việt": {
+        "clear_cache_btn": "🔄 Buộc làm mới dữ liệu lịch sử",
+        "auto_refresh_label": "⏱ Bật tự động cập nhật giá (30 giây)",
+        "realtime_title": "⚡ Giá trực tuyến (Yahoo)",
+        "prev_close": "Đóng cửa trước",
+        "near_buy_target": "🔥 Giá đã đạt mức hỗ trợ mua!",
+        "near_sell_target": "⚠️ Giá đã đạt mức kháng cự bán!",
+        "normal_status": "Đang giao dịch trực tuyến",
+        "refresh_success": "Đã xóa bộ nhớ đệm lịch sử!"
+    }
+}
+
 # --- 側邊欄常用股票選項翻譯 ---
 stock_descriptions = {
     "繁體中文": {
@@ -971,6 +1026,107 @@ def get_stock_last_price(stock_id: str) -> float:
         return float(df.iloc[-1]['close'])
     return 0.0
 
+# --- 盤中即時行情卡片繪製與 Fragment 宣告 ---
+def draw_realtime_card(stock_id: str, price_targets: dict, selected_lang: str, auto_refresh: bool):
+    rt = fetch_realtime_price(stock_id)
+    if not rt.get("success"):
+        st.warning(f"無法取得即時報價: {rt.get('error')}")
+        return
+        
+    price = rt["price"]
+    change = rt["change"]
+    change_pct = rt["change_percent"]
+    symbol = rt["symbol"]
+    
+    if change > 0:
+        color = "#EF4444"
+        sign = "+"
+    elif change < 0:
+        color = "#10B981"
+        sign = ""
+    else:
+        color = "#94A3B8"
+        sign = ""
+        
+    buy_ideal = price_targets.get("buy_ideal")
+    sell_ideal = price_targets.get("sell_ideal")
+    
+    status_alert = ""
+    if buy_ideal and price <= buy_ideal:
+        status_alert = f"""
+            <div style="background:rgba(239,68,68,0.1); color:#EF4444; border:1px solid #EF444433; 
+                        padding:8px 12px; border-radius:6px; font-size:0.82rem; font-weight:600; text-align:center; margin-top:10px;">
+                {REALTIME_DICT[selected_lang]["near_buy_target"]}
+            </div>
+        """
+    elif sell_ideal and price >= sell_ideal:
+        status_alert = f"""
+            <div style="background:rgba(245,158,11,0.1); color:#F59E0B; border:1px solid #F59E0B33; 
+                        padding:8px 12px; border-radius:6px; font-size:0.82rem; font-weight:600; text-align:center; margin-top:10px;">
+                {REALTIME_DICT[selected_lang]["near_sell_target"]}
+            </div>
+        """
+        
+    buy_desc = f"{buy_ideal} 元" if buy_ideal else "--"
+    sell_desc = f"{sell_ideal} 元" if sell_ideal else "--"
+    
+    st.markdown(f"""
+        <div class="glass-card" style="padding:16px 20px; margin-bottom:16px; 
+                     background: linear-gradient(135deg, rgba(20,25,50,0.8) 0%, rgba(10,12,30,0.9) 100%); 
+                     border-left: 4px solid {color};">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <div style="font-size:0.8rem; color:#94A3B8; font-weight:600;">
+                        {REALTIME_DICT[selected_lang]["realtime_title"]} - {symbol}
+                    </div>
+                    <div style="display:flex; align-items:baseline; gap:12px; margin-top:4px;">
+                        <span style="font-size:2.0rem; font-weight:800; color:#F8FAFC; font-family: monospace; line-height:1;">
+                            {price:,.2f}
+                        </span>
+                        <span style="font-size:1.1rem; font-weight:700; color:{color}; font-family: monospace;">
+                            {sign}{change:+.2f} ({sign}{change_pct:+.2f}%)
+                        </span>
+                    </div>
+                </div>
+                <div style="display:flex; gap:15px; text-align:right;">
+                    <div>
+                        <div style="font-size:0.72rem; color:#64748B;">{REALTIME_DICT[selected_lang]["prev_close"]}</div>
+                        <div style="font-size:0.95rem; font-weight:600; color:#CBD5E1; font-family: monospace;">
+                            {rt["prev_close"]:,.2f}
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem; color:#64748B;">支撐位 (買進參考)</div>
+                        <div style="font-size:0.95rem; font-weight:600; color:#10B981; font-family: monospace;">
+                            {buy_desc}
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem; color:#64748B;">壓力位 (賣出參考)</div>
+                        <div style="font-size:0.95rem; font-weight:600; color:#EF4444; font-family: monospace;">
+                            {sell_desc}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {status_alert}
+        </div>
+    """, unsafe_allow_html=True)
+    
+    if not auto_refresh:
+        col1, col2 = st.columns([1, 4])
+        with col1:
+            if st.button("🔄 刷新即時報價", key="btn_manual_refresh_quote", use_container_width=True):
+                st.rerun()
+
+@st.fragment(run_every=30)
+def render_realtime_quote_auto(stock_id: str, price_targets: dict, selected_lang: str):
+    draw_realtime_card(stock_id, price_targets, selected_lang, auto_refresh=True)
+
+@st.fragment()
+def render_realtime_quote_manual(stock_id: str, price_targets: dict, selected_lang: str):
+    draw_realtime_card(stock_id, price_targets, selected_lang, auto_refresh=False)
+
 # --- 側邊欄設定區 ---
 with st.sidebar:
     # 選擇語言
@@ -1005,6 +1161,17 @@ with st.sidebar:
     )
     selected_model_name = model_options[selected_model_label]
         
+    st.markdown("---")
+    # 快取與即時更新控制
+    if st.button(REALTIME_DICT[selected_lang]["clear_cache_btn"], use_container_width=True):
+        st.cache_data.clear()
+        st.toast(REALTIME_DICT[selected_lang]["refresh_success"], icon="✅")
+        
+    auto_refresh = st.toggle(
+        REALTIME_DICT[selected_lang]["auto_refresh_label"],
+        value=True
+    )
+    
     st.markdown("---")
     
     # 股票選擇
@@ -1067,6 +1234,12 @@ tab_market, tab_portfolio, tab_chat, tab_news, tab_screener, tab_lessons = st.ta
 # TAB 1: 📊 即時看盤與型態偵測
 # ==============================================================================
 with tab_market:
+    # ── 盤中即時行情 ──────────────────────────────────────────
+    if auto_refresh:
+        render_realtime_quote_auto(stock_id_input, price_targets, selected_lang)
+    else:
+        render_realtime_quote_manual(stock_id_input, price_targets, selected_lang)
+
     # ── 方案 A：股票類型標籤 ────────────────────────────────────
     if stock_type and stock_type.get("primary_type"):
         pt = stock_type["primary_type"]
