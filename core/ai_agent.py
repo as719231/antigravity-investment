@@ -1,4 +1,4 @@
-from google import genai
+﻿from google import genai
 from google.genai import types
 import json
 import os
@@ -285,6 +285,12 @@ def get_stock_news_briefing(stock_id: str, stock_name: str = "", viewpoint: str 
             * 語氣要果斷、紀律化、注重風險管理。
             """
             
+
+
+        # CFA 機構分析師深度研究 - 覆蓋 prompt
+        if 'CFA' in viewpoint or '機構分析師' in viewpoint or '深度研究' in viewpoint:
+            prompt = f"""角色：CFA 機構分析師。目標：{stock_id}{name_query}。請搜尋最新財報，按以下7點結構分析：(1)商業模式護城河 (2)營收結構成長引擎 (3)終端市場TAM (4)投資論述3-6月催化劑 (5)同業對比表格含YoY毛利率EPS本益比+估值 (6)FCF資本配置股利政策 (7)管理層指引2-3個風險。語言:{selected_lang}，精煉客觀，禁止捏造。"""
+
         response = client.models.generate_content(
             model=model_name,
             contents=prompt,
@@ -337,6 +343,12 @@ def get_ai_stock_recommendations(market: str, selected_lang: str = "繁體中文
         * 語氣要客觀、深刻、紀律化，並強調「所有建議僅供決策輔助，交易需手動執行且自負盈虧」。
         """
         
+
+
+        # CFA 機構分析師深度研究 - 覆蓋 prompt
+        if 'CFA' in viewpoint or '機構分析師' in viewpoint or '深度研究' in viewpoint:
+            prompt = f"""角色：CFA 機構分析師。目標：{stock_id}{name_query}。請搜尋最新財報，按以下7點結構分析：(1)商業模式護城河 (2)營收結構成長引擎 (3)終端市場TAM (4)投資論述3-6月催化劑 (5)同業對比表格含YoY毛利率EPS本益比+估值 (6)FCF資本配置股利政策 (7)管理層指引2-3個風險。語言:{selected_lang}，精煉客觀，禁止捏造。"""
+
         response = client.models.generate_content(
             model=model_name,
             contents=prompt,
