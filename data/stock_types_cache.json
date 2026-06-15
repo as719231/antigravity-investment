@@ -217,5 +217,98 @@
       "secondary_risks": [],
       "secondary_tips": []
     }
+  },
+  "5328": {
+    "cached_at": "2026-06-09T12:00:01.659865",
+    "result": {
+      "stock_id": "5328",
+      "company_name": "華容",
+      "primary_type": "Unknown",
+      "primary_confidence": 0,
+      "secondary_type": null,
+      "secondary_confidence": 0,
+      "model_blend": {
+        "primary_weight": 1.0,
+        "secondary_weight": 0.0
+      },
+      "reason": [
+        "產業分類：電子零組件業"
+      ],
+      "market_cap_b": 0.0,
+      "risks": [
+        "無法確認股票類型，使用通用分析模型",
+        "建議先研究基本面（財報、EPS趨勢）再進場"
+      ],
+      "operation_tips": [
+        "使用通用操作策略，建議保守",
+        "停利設定：+8~12%，停損：-5~7%",
+        "建議先研究基本面再進場，不追高"
+      ],
+      "secondary_risks": [],
+      "secondary_tips": []
+    }
+  },
+  "00981A": {
+    "cached_at": "2026-06-09T22:51:28.498413",
+    "result": {
+      "stock_id": "00981A",
+      "company_name": "主動統一台股增長",
+      "primary_type": "ETF",
+      "primary_confidence": 100,
+      "secondary_type": null,
+      "secondary_confidence": 0,
+      "model_blend": {
+        "primary_weight": 1.0,
+        "secondary_weight": 0.0
+      },
+      "reason": [
+        "產業分類：ETF",
+        "包含關鍵字：ETF"
+      ],
+      "market_cap_b": 0.0,
+      "risks": [
+        "折溢價風險：市場恐慌時可能出現折價",
+        "成分股集中風險：單一成分股比重過高時利空影響大",
+        "建議定期定額，不追高殺低"
+      ],
+      "operation_tips": [
+        "策略：定期定額優於追高殺低",
+        "目標報酬：年化 8~10% 為基準",
+        "配置比例：建議佔總投資組合 30~50%",
+        "注意：高股息 ETF 除息日前後觀察填息速度"
+      ],
+      "secondary_risks": [],
+      "secondary_tips": []
+    }
+  },
+  "8112": {
+    "cached_at": "2026-06-11T22:45:21.106923",
+    "result": {
+      "stock_id": "8112",
+      "company_name": "至上",
+      "primary_type": "Unknown",
+      "primary_confidence": 0,
+      "secondary_type": null,
+      "secondary_confidence": 0,
+      "model_blend": {
+        "primary_weight": 1.0,
+        "secondary_weight": 0.0
+      },
+      "reason": [
+        "產業分類：電子通路業"
+      ],
+      "market_cap_b": 0.0,
+      "risks": [
+        "無法確認股票類型，使用通用分析模型",
+        "建議先研究基本面（財報、EPS趨勢）再進場"
+      ],
+      "operation_tips": [
+        "使用通用操作策略，建議保守",
+        "停利設定：+8~12%，停損：-5~7%",
+        "建議先研究基本面再進場，不追高"
+      ],
+      "secondary_risks": [],
+      "secondary_tips": []
+    }
   }
 }

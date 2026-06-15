@@ -18,6 +18,10 @@ from core.pattern_detector import evaluate_stock_signals, fetch_stock_data
 from core.ai_agent import generate_advisor_response, get_stock_news_briefing, get_ai_stock_recommendations
 from core.realtime_provider import fetch_realtime_price
 
+# --- 積木化新分頁模組（各自獨立，不互相影響）---
+import ui.tab_us_market as tab_us_market_mod
+import ui.tab_futures as tab_futures_mod
+
 # --- 多語言翻譯字典 ---
 LANG_DICT = {
     "繁體中文": {
@@ -37,12 +41,14 @@ LANG_DICT = {
         "main_title": "📈 專屬 AI 股市理財助手",
         "input_warning": "請在左側欄位輸入正確的股票代碼。",
         "spinner_analyzing": "正在分析標的 {stock_id} 當前走勢...",
-        "tab_market": "📊 即時看盤與型態偵測",
-        "tab_portfolio": "💼 專屬持股追蹤看板",
-        "tab_chat": "💬 理財專員對話室",
-        "tab_news": "📰 聯網新聞與 AI 分析",
-        "tab_screener": "💡 智慧選股推薦",
-        "tab_lessons": "📚 股市教學隨身筆記",
+        "tab_market": "📊 台股看盤",
+        "tab_us_market": "🇺🇸 美股看盤",
+        "tab_futures": "📉 期貨市場",
+        "tab_portfolio": "💼 持股追蹤",
+        "tab_chat": "💬 AI 對話",
+        "tab_news": "📰 新聞分析",
+        "tab_screener": "💡 智慧選股",
+        "tab_lessons": "📚 教學筆記",
         "close_price": "今日收盤價",
         "currency": "元",
         "rsi_label": "強弱 RSI (14)",
@@ -151,12 +157,14 @@ LANG_DICT = {
         "main_title": "📈 Personal AI Stock Advisor",
         "input_warning": "Please enter a valid stock code in the sidebar.",
         "spinner_analyzing": "Analyzing current trend of stock {stock_id}...",
-        "tab_market": "📊 Real-time Board & Pattern Detection",
-        "tab_portfolio": "💼 Portfolio Tracker",
-        "tab_chat": "💬 Advisor Chatroom",
-        "tab_news": "📰 Web News & AI Analysis",
-        "tab_screener": "💡 AI Screener",
-        "tab_lessons": "📚 Stock Lessons & Notes",
+        "tab_market": "📊 TW Market",
+        "tab_us_market": "🇺🇸 US Market",
+        "tab_futures": "📉 Futures",
+        "tab_portfolio": "💼 Portfolio",
+        "tab_chat": "💬 AI Chat",
+        "tab_news": "📰 News",
+        "tab_screener": "💡 Screener",
+        "tab_lessons": "📚 Lessons",
         "close_price": "Today's Close",
         "currency": "TWD",
         "rsi_label": "RSI (14) Strength",
@@ -265,12 +273,14 @@ LANG_DICT = {
         "main_title": "📈 専属 AI 株式投資アシスタント",
         "input_warning": "左側の欄に正しい株式コードを入力してください。",
         "spinner_analyzing": "銘柄 {stock_id} の現在の動向を分析中...",
-        "tab_market": "📊 リアルタイム板・パターン検知",
-        "tab_portfolio": "💼 専属ポートフォリオ追跡",
-        "tab_chat": "💬 アドバイザー対話室",
-        "tab_news": "📰 ネットニュース・AI分析",
-        "tab_screener": "💡 AIスクリーナー",
-        "tab_lessons": "📚 株式投資学習ノート",
+        "tab_market": "📊 台湾株",
+        "tab_us_market": "🇺🇸 米国株",
+        "tab_futures": "📉 先物",
+        "tab_portfolio": "💼 保有株",
+        "tab_chat": "💬 AIチャット",
+        "tab_news": "📰 ニュース",
+        "tab_screener": "💡 銘柄選定",
+        "tab_lessons": "📚 学習ノート",
         "close_price": "本日終値",
         "currency": "元",
         "rsi_label": "強弱 RSI (14)",
@@ -379,12 +389,14 @@ LANG_DICT = {
         "main_title": "📈 ผู้ช่วยส่วนตัว AI วิเคราะห์หุ้น",
         "input_warning": "กรุณากรอกรหัสหุ้นที่ถูกต้องในคอลัมน์ด้านซ้าย",
         "spinner_analyzing": "กำลังวิเคราะห์แนวโน้มปัจจุบันของหุ้น {stock_id}...",
-        "tab_market": "📊 การดูบอร์ดเรียลไทม์และการตรวจจับรูปแบบ",
-        "tab_portfolio": "💼 บอร์ดติดตามพอร์ตหุ้นส่วนตัว",
-        "tab_chat": "💬 ห้องสนทนากับเจ้าหน้าที่ดูแลบัญชี",
-        "tab_news": "📰 ข่าวออนไลน์และการวิเคราะห์ AI",
-        "tab_screener": "💡 แนะนำการสกรีนหุ้น",
-        "tab_lessons": "📚 บันทึกการเรียนรู้ตลาดหุ้น",
+        "tab_market": "📊 หุ้นไต้หวัน",
+        "tab_us_market": "🇺🇸 หุ้นสหรัฐ",
+        "tab_futures": "📉 ฟิวเจอร์ส",
+        "tab_portfolio": "💼 พอร์ต",
+        "tab_chat": "💬 AI แชท",
+        "tab_news": "📰 ข่าว",
+        "tab_screener": "💡 เลือกหุ้น",
+        "tab_lessons": "📚 บันทึก",
         "close_price": "ราคาปิดวันนี้",
         "currency": "TWD",
         "rsi_label": "ความแข็งแกร่ง RSI (14)",
@@ -493,12 +505,14 @@ LANG_DICT = {
         "main_title": "📈 Trợ lý AI Tài chính Cá nhân",
         "input_warning": "Vui lòng nhập đúng mã cổ phiếu ở cột bên trái.",
         "spinner_analyzing": "Đang phân tích xu hướng hiện tại của mã {stock_id}...",
-        "tab_market": "📊 Xem bảng giá & Phát hiện mô hình",
-        "tab_portfolio": "💼 Bảng theo dõi danh mục cá nhân",
-        "tab_chat": "💬 Phòng trò chuyện với trợ lý",
-        "tab_news": "📰 Tin tức mạng & Phân tích AI",
-        "tab_screener": "💡 Trình lọc cổ phiếu AI",
-        "tab_lessons": "📚 Sổ tay học tập chứng khoán",
+        "tab_market": "📊 Cổ phiếu TW",
+        "tab_us_market": "🇺🇸 Cổ phiếu Mỹ",
+        "tab_futures": "📉 Phái sinh",
+        "tab_portfolio": "💼 Danh mục",
+        "tab_chat": "💬 AI Chat",
+        "tab_news": "📰 Tin tức",
+        "tab_screener": "💡 Lọc cổ phiếu",
+        "tab_lessons": "📚 Học tập",
         "close_price": "Giá đóng cửa hôm nay",
         "currency": "TWD",
         "rsi_label": "Sức mạnh RSI (14)",
@@ -1303,8 +1317,10 @@ stock_type     = analysis.get("stock_type",     {})   # 股票類型自動判定
 currency = LANG_DICT[selected_lang]["currency"]
 
 # --- 頁面 Tabs 配置 ---
-tab_market, tab_portfolio, tab_chat, tab_news, tab_screener, tab_lessons = st.tabs([
+tab_market, tab_us_market, tab_futures, tab_portfolio, tab_chat, tab_news, tab_screener, tab_lessons = st.tabs([
     LANG_DICT[selected_lang]["tab_market"],
+    LANG_DICT[selected_lang]["tab_us_market"],
+    LANG_DICT[selected_lang]["tab_futures"],
     LANG_DICT[selected_lang]["tab_portfolio"],
     LANG_DICT[selected_lang]["tab_chat"],
     LANG_DICT[selected_lang]["tab_news"],
@@ -2169,6 +2185,18 @@ with tab_screener:
         st.markdown("---")
         st.markdown(LANG_DICT[selected_lang]["screener_report_title"].format(market=screener_market.split(' ')[0]))
         st.info(st.session_state.screener_results[cache_key])
+
+# ==============================================================================
+# TAB 2: 🇺🇸 美股即時看盤（積木模組：ui/tab_us_market.py）
+# ==============================================================================
+with tab_us_market:
+    tab_us_market_mod.render(selected_lang)
+
+# ==============================================================================
+# TAB 3: 📉 期貨市場看盤（積木模組：ui/tab_futures.py）
+# ==============================================================================
+with tab_futures:
+    tab_futures_mod.render(selected_lang)
 
 # ==============================================================================
 # TAB 6: 📚 股市教學隨身筆記
