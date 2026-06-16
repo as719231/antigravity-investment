@@ -913,6 +913,33 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# --- 📱 裝置偵測：判斷是否為手機（積木化，只影響佈局邏輯）---
+import streamlit.components.v1 as _components
+_components.html("""
+<script>
+(function() {
+    // 偵測螢幕寬度，決定是否為手機
+    var isMobile = window.innerWidth <= 768;
+    // 透過 query string 傳給 Streamlit
+    var url = new URL(window.location.href);
+    var current = url.searchParams.get('_mobile');
+    var target  = isMobile ? '1' : '0';
+    if (current !== target) {
+        url.searchParams.set('_mobile', target);
+        window.history.replaceState({}, '', url.toString());
+    }
+    // 同時在 localStorage 存一份（備援）
+    localStorage.setItem('ag_is_mobile', target);
+})();
+</script>
+""", height=0)
+
+# 讀取裝置類型（從 query params）
+_qp = st.query_params
+IS_MOBILE = _qp.get("_mobile", "0") == "1"
+
+
+
 # --- 載入 CSS 樣式系統 (高階深色質感設計) ---
 st.markdown("""
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
@@ -1112,6 +1139,85 @@ st.markdown("""
             transform: translateY(-1px) !important;
             box-shadow: 0 6px 12px rgba(16, 185, 129, 0.25) !important;
         }
+
+        /* ══ 📱 手機響應式 Mobile Responsive ══ */
+        @media (max-width: 768px) {
+            html, body { font-size: 14px !important; }
+            .gradient-text { font-size: 1.6rem !important; letter-spacing: -0.5px !important; }
+            .sub-header { font-size: 0.9rem !important; margin-bottom: 12px !important; }
+            [data-testid="stMainBlockContainer"],
+            .main .block-container {
+                padding-bottom: 72px !important;
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+            }
+            [data-testid="stSidebar"] { max-width: 85vw !important; }
+            [data-testid="column"] {
+                width: 100% !important;
+                flex: 1 1 100% !important;
+                min-width: 100% !important;
+            }
+            [data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; gap: 8px !important; }
+            .stTabs [data-baseweb="tab-list"] {
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                z-index: 9999 !important;
+                background: #0F172A !important;
+                border-top: 1px solid rgba(255,255,255,0.08) !important;
+                display: flex !important;
+                justify-content: space-around !important;
+                align-items: stretch !important;
+                padding: 4px 0 env(safe-area-inset-bottom, 4px) !important;
+                height: 60px !important;
+                gap: 0 !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.5) !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            .stTabs [data-baseweb="tab"] {
+                flex: 0 0 auto !important;
+                min-width: 60px !important;
+                max-width: 85px !important;
+                height: 52px !important;
+                padding: 4px !important;
+                border-radius: 0 !important;
+                border: none !important;
+                background: transparent !important;
+                font-size: 0.58rem !important;
+                font-weight: 600 !important;
+                color: #64748B !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                white-space: nowrap !important;
+                transition: color 0.2s ease !important;
+            }
+            .stTabs [aria-selected="true"] {
+                background: transparent !important;
+                color: #10B981 !important;
+                border-bottom: 2px solid #10B981 !important;
+                box-shadow: none !important;
+                font-weight: 800 !important;
+            }
+            .glass-card { padding: 12px 14px !important; margin-bottom: 8px !important; border-radius: 12px !important; }
+            .metric-value { font-size: 1.35rem !important; }
+            .metric-title { font-size: 0.7rem !important; }
+            div.stButton > button:first-child { min-height: 48px !important; font-size: 0.95rem !important; padding: 12px 16px !important; }
+            .stTextInput input, .stNumberInput input { font-size: 1rem !important; min-height: 44px !important; }
+            table { display: block !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; font-size: 0.78rem !important; }
+            th, td { padding: 8px 10px !important; font-size: 0.78rem !important; white-space: nowrap !important; }
+            .desktop-only { display: none !important; }
+        }
+        @media (max-width: 390px) {
+            .stTabs [data-baseweb="tab"] { font-size: 0.5rem !important; min-width: 50px !important; }
+            .gradient-text { font-size: 1.3rem !important; }
+            .metric-value { font-size: 1.1rem !important; }
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -1290,8 +1396,38 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 st.markdown(f"<div class='sub-header'>{LANG_DICT[selected_lang]['sub_header']}</div>", unsafe_allow_html=True)
 
+# --- 📱 手機版：頂部股票搜尋欄（電腦版側邊欄已有，手機版在此顯示）---
+if IS_MOBILE:
+    st.markdown("""<div style='background:rgba(15,23,42,0.9); border:1px solid rgba(255,255,255,0.06);
+    border-radius:12px; padding:10px 14px; margin-bottom:14px;
+    backdrop-filter:blur(12px);'>
+    <div style='font-size:0.72rem; color:#64748B; font-weight:600; margin-bottom:6px;'>
+    📱 當前分析標的</div>""", unsafe_allow_html=True)
+    _mobile_col1, _mobile_col2 = st.columns([3, 1])
+    with _mobile_col1:
+        _mobile_ticker = st.text_input(
+            "股票代號", value=stock_id,
+            key="mobile_quick_ticker",
+            label_visibility="collapsed",
+            placeholder="輸入股票代號，例：0050 / AAPL"
+        )
+    with _mobile_col2:
+        if st.button("🔍", key="mobile_search_btn", use_container_width=True):
+            if _mobile_ticker.strip():
+                # 更新側邊欄的 stock_id（透過 session state）
+                st.session_state["mobile_override_ticker"] = _mobile_ticker.strip()
+                st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+
 # 偵測輸入的股票代號
 stock_id = stock_id_input.strip()
+
+# 手機版：若有快速搜尋覆蓋，使用覆蓋值
+if "mobile_override_ticker" in st.session_state and st.session_state["mobile_override_ticker"]:
+    stock_id = st.session_state["mobile_override_ticker"]
+
 
 if not stock_id:
     st.warning(LANG_DICT[selected_lang]["input_warning"])
@@ -2133,7 +2269,7 @@ with tab_news:
     
     if trigger_btn:
         viewpoint_short = viewpoint.split(' ')[0]
-        with st.spinner(LANG_DICT[selected_lang]["news_spinner"].format(viewpoint=viewpoint_short)):
+        with st.spinner(LANG_DICT[selected_lang]["news_spinner"].format(stock_id=stock_id, viewpoint=viewpoint_short)):
             ai_news_report = get_stock_news_briefing(
                 stock_id, 
                 stock_name, 
@@ -2145,6 +2281,112 @@ with tab_news:
         st.markdown("---")
         st.markdown(LANG_DICT[selected_lang]["news_report_title"].format(viewpoint=viewpoint_short))
         st.info(ai_news_report)
+
+        # ── 分享工具列：匯出精美 HTML（保留完整排版）────────────
+        import datetime as _dt, re as _re
+        _ts    = _dt.datetime.now().strftime("%Y%m%d_%H%M")
+        _now   = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+        _fname = f"AI分析報告_{stock_id}_{_ts}.html"
+
+        def _md_to_html(text):
+            import re
+            # 表格
+            def _tbl(m):
+                rows = [r for r in m.group(0).strip().splitlines() if r.strip()]
+                html, hdr = [], True
+                for row in rows:
+                    if re.match(r'^\s*\|?[-: |]+\|?\s*$', row):
+                        hdr = False; continue
+                    cells = [c.strip() for c in row.strip().strip('|').split('|')]
+                    tag = 'th' if hdr else 'td'
+                    html.append('<tr>' + ''.join(f'<{tag}>{c}</{tag}>' for c in cells) + '</tr>')
+                    hdr = False
+                return '<table>' + ''.join(html) + '</table>'
+            text = re.sub(r'(\|[^\n]+\n)+', _tbl, text)
+            # 標題
+            text = re.sub(r'^####\s+(.+)$', r'<h4>\1</h4>', text, flags=re.MULTILINE)
+            text = re.sub(r'^###\s+(.+)$',  r'<h3>\1</h3>', text, flags=re.MULTILINE)
+            text = re.sub(r'^##\s+(.+)$',   r'<h2>\1</h2>', text, flags=re.MULTILINE)
+            text = re.sub(r'^#\s+(.+)$',    r'<h1>\1</h1>', text, flags=re.MULTILINE)
+            # 粗體/斜體
+            text = re.sub(r'\*\*\*(.+?)\*\*\*', r'<strong><em>\1</em></strong>', text)
+            text = re.sub(r'\*\*(.+?)\*\*',       r'<strong>\1</strong>', text)
+            text = re.sub(r'\*(.+?)\*',             r'<em>\1</em>', text)
+            # 條列
+            lines_in = text.split('\n'); out = []; in_ul = False
+            for ln in lines_in:
+                if re.match(r'^\s*[-*]\s+', ln):
+                    if not in_ul: out.append('<ul>'); in_ul = True
+                    out.append('<li>' + re.sub(r'^\s*[-*]\s+','',ln) + '</li>')
+                else:
+                    if in_ul: out.append('</ul>'); in_ul = False
+                    out.append(ln)
+            if in_ul: out.append('</ul>')
+            text = '\n'.join(out)
+            text = re.sub(r'^\s*---+\s*$', '<hr>', text, flags=re.MULTILINE)
+            text = re.sub(r'^>\s+(.+)$', r'<blockquote>\1</blockquote>', text, flags=re.MULTILINE)
+            paras = re.split(r'\n{2,}', text); result = []
+            for p in paras:
+                p = p.strip()
+                if p and not any(p.startswith(t) for t in ['<h','<ul','<ol','<table','<hr','<block']):
+                    p = '<p>' + p.replace('\n','<br>') + '</p>'
+                result.append(p)
+            return '\n'.join(result)
+
+        _body = _md_to_html(ai_news_report)
+        _vp   = viewpoint_short
+
+        _html = f"""<!DOCTYPE html>
+<html lang="zh-TW"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AI 分析報告 — {stock_id}</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{{--bg:#0b0f19;--card:#131929;--bdr:#1e293b;--txt:#e2e8f0;--muted:#94a3b8;--acc:#38bdf8;}}
+*{{box-sizing:border-box;margin:0;padding:0;}}
+body{{background:var(--bg);color:var(--txt);font-family:'Noto Sans TC','Inter',sans-serif;font-size:15px;line-height:1.8;}}
+.wrap{{max-width:900px;margin:0 auto;padding:32px 24px 64px;}}
+.hdr{{background:linear-gradient(135deg,#0f172a,#1e293b);border:1px solid var(--bdr);border-radius:16px;padding:28px 32px;margin-bottom:28px;}}
+.hdr h1{{font-size:1.55rem;font-weight:700;color:var(--acc);margin-bottom:8px;}}
+.badge{{display:inline-block;background:rgba(56,189,248,.12);color:var(--acc);border:1px solid rgba(56,189,248,.3);border-radius:20px;padding:3px 12px;font-size:.8rem;font-weight:600;margin-right:8px;}}
+.body{{background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:32px;}}
+h1,h2{{color:var(--acc);font-size:1.2rem;font-weight:700;margin:28px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--bdr);}}
+h3{{color:#f8fafc;font-size:1.05rem;font-weight:700;margin:18px 0 8px;}}
+h4{{color:var(--muted);font-size:.95rem;margin:14px 0 6px;}}
+p{{margin:8px 0 10px;}}
+ul{{margin:8px 0 10px 20px;}}
+li{{margin-bottom:5px;}}li::marker{{color:var(--acc);}}
+table{{width:100%;border-collapse:collapse;margin:14px 0;font-size:.87rem;border-radius:8px;overflow:hidden;}}
+th{{background:rgba(56,189,248,.12);color:var(--acc);font-weight:700;padding:10px 14px;text-align:left;border:1px solid var(--bdr);}}
+td{{padding:9px 14px;border:1px solid var(--bdr);}}
+tr:nth-child(even) td{{background:rgba(30,41,59,.4);}}
+hr{{border:none;border-top:1px solid var(--bdr);margin:22px 0;}}
+blockquote{{border-left:4px solid var(--acc);padding:8px 16px;margin:10px 0;background:rgba(56,189,248,.06);border-radius:0 8px 8px 0;color:var(--muted);font-style:italic;}}
+strong{{color:#f8fafc;font-weight:700;}}
+.foot{{text-align:center;margin-top:36px;color:var(--muted);font-size:.78rem;}}
+</style></head><body>
+<div class="wrap">
+<div class="hdr">
+<h1>📊 AI 分析報告 — {stock_id}</h1>
+<div><span class="badge">{_vp}</span><span class="badge">產出時間：{_now}</span></div>
+</div>
+<div class="body">{_body}</div>
+<div class="foot">由 AI 股市理財助手自動產出 · 僅供參考，非投資建議 · {_now}</div>
+</div></body></html>"""
+
+        _btn_col, _ = st.columns([2, 4])
+        with _btn_col:
+            st.download_button(
+                label="📤 匯出 HTML 報告（傳給朋友直接用瀏覽器打開）",
+                data=_html.encode("utf-8"),
+                file_name=_fname,
+                mime="text/html",
+                use_container_width=True,
+                key="news_html_btn",
+                type="primary"
+            )
+        st.caption("💡 朋友收到 HTML 檔後，用瀏覽器打開即可看到完整排版，不需要任何軟體。")
+
 
 # ==============================================================================
 # TAB 5: 💡 智慧選股推薦
