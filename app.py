@@ -2494,6 +2494,48 @@ with tab_chat:
         # 將發言寫入歷史紀錄
         st.session_state.chat_history.append({"role": "user", "text": user_query})
         
+        # ── 準備分析數據（技術指標/總經/融資融券/基本面）──
+        _ai_indicators  = None
+        _ai_macro       = None
+        _ai_margin      = None
+        _ai_fundamental = None
+
+        _current_stock_id = price_targets.get("stock_id", stock_id) if price_targets else stock_id
+        try:
+            # 任務1：技術指標精確數值（從已下載的 K 線算）
+            from core.pattern_detector import fetch_stock_data
+            from core.indicator_extractor import extract_technical_indicators
+            _df_for_ai = fetch_stock_data(_current_stock_id, days=120)
+            if not _df_for_ai.empty:
+                _ai_indicators = extract_technical_indicators(_df_for_ai)
+        except Exception:
+            pass
+
+        try:
+            # 任務2：總體經濟（VIX/SOX/台幣/美股）
+            from core.macro_provider import fetch_macro_context
+            _ai_macro = fetch_macro_context()
+        except Exception:
+            pass
+
+        try:
+            # 任務3：融資融券
+            from core.margin_provider import fetch_margin_data
+            _ai_margin = fetch_margin_data(_current_stock_id)
+        except Exception:
+            pass
+
+        try:
+            # 任務4：基本面（EPS/ROE/毛利率/PE）
+            from core.fundamental_provider import fetch_fundamentals, fetch_monthly_revenue
+            _fund = fetch_fundamentals(_current_stock_id)
+            _rev  = fetch_monthly_revenue(_current_stock_id)
+            if _fund.get("available"):
+                _fund["monthly_revenue"] = _rev
+                _ai_fundamental = _fund
+        except Exception:
+            pass
+
         # 呼叫理財專員 API
         with st.spinner(LANG_DICT[selected_lang]["chat_spinner"]):
             from core.ai_agent import generate_advisor_response
@@ -2504,7 +2546,11 @@ with tab_chat:
                 selected_lang=selected_lang,
                 price_targets=price_targets,
                 institutional=institutional,
-                stock_type=stock_type
+                stock_type=stock_type,
+                indicators=_ai_indicators,
+                macro=_ai_macro,
+                margin=_ai_margin,
+                fundamental=_ai_fundamental
             )
             
         # 顯示 AI 回覆
@@ -2532,7 +2578,11 @@ with tab_chat:
                     selected_lang=selected_lang,
                     price_targets=price_targets,
                     institutional=institutional,
-                    stock_type=stock_type
+                    stock_type=stock_type,
+                    indicators=_ai_indicators if "_ai_indicators" in dir() else None,
+                    macro=_ai_macro if "_ai_macro" in dir() else None,
+                    margin=_ai_margin if "_ai_margin" in dir() else None,
+                    fundamental=_ai_fundamental if "_ai_fundamental" in dir() else None
                 )
                 st.session_state.chat_history.append({"role": "model", "text": resp})
             st.rerun()
@@ -2550,7 +2600,11 @@ with tab_chat:
                     selected_lang=selected_lang,
                     price_targets=price_targets,
                     institutional=institutional,
-                    stock_type=stock_type
+                    stock_type=stock_type,
+                    indicators=_ai_indicators if "_ai_indicators" in dir() else None,
+                    macro=_ai_macro if "_ai_macro" in dir() else None,
+                    margin=_ai_margin if "_ai_margin" in dir() else None,
+                    fundamental=_ai_fundamental if "_ai_fundamental" in dir() else None
                 )
                 st.session_state.chat_history.append({"role": "model", "text": resp})
             st.rerun()
@@ -2568,7 +2622,11 @@ with tab_chat:
                     selected_lang=selected_lang,
                     price_targets=price_targets,
                     institutional=institutional,
-                    stock_type=stock_type
+                    stock_type=stock_type,
+                    indicators=_ai_indicators if "_ai_indicators" in dir() else None,
+                    macro=_ai_macro if "_ai_macro" in dir() else None,
+                    margin=_ai_margin if "_ai_margin" in dir() else None,
+                    fundamental=_ai_fundamental if "_ai_fundamental" in dir() else None
                 )
                 st.session_state.chat_history.append({"role": "model", "text": resp})
             st.rerun()

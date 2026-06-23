@@ -102,7 +102,7 @@ def get_portfolio_context() -> str:
         print(f"載入 portfolio 失敗: {str(e)}")
         return ""
 
-def get_system_instruction(selected_lang: str = "繁體中文", price_targets: dict = None, institutional: dict = None, stock_type: dict = None) -> str:
+def get_system_instruction(selected_lang: str = "繁體中文", price_targets: dict = None, institutional: dict = None, stock_type: dict = None, indicators: dict = None, macro: dict = None, margin: dict = None, fundamental: dict = None) -> str:
     """
     建立理財專員的系統 Instruction
     """
@@ -198,6 +198,33 @@ def get_system_instruction(selected_lang: str = "繁體中文", price_targets: d
 =====================================================
 """
 
+    # 技術指標精確數值區塊
+    ind_ctx = ""
+    if indicators and indicators.get("available"):
+        from core.indicator_extractor import format_indicators_for_ai
+        stock_id_label = price_targets.get("stock_id", "") if price_targets else ""
+        ind_ctx = format_indicators_for_ai(indicators, stock_id=stock_id_label)
+
+    # 總體經濟環境區塊
+    macro_ctx = ""
+    if macro and macro.get("available"):
+        from core.macro_provider import format_macro_for_ai
+        macro_ctx = format_macro_for_ai(macro)
+
+    # 融資融券區塊
+    margin_ctx = ""
+    if margin and margin.get("available"):
+        from core.margin_provider import format_margin_for_ai
+        stock_id_label = price_targets.get("stock_id", "") if price_targets else ""
+        margin_ctx = format_margin_for_ai(margin, stock_id=stock_id_label)
+
+    # 基本面數據區塊
+    fund_ctx = ""
+    if fundamental and fundamental.get("available"):
+        from core.fundamental_provider import format_fundamental_for_ai
+        stock_id_label = price_targets.get("stock_id", "") if price_targets else ""
+        fund_ctx = format_fundamental_for_ai(fundamental, stock_id=stock_id_label)
+
     instruction = f"""
 你是一位溫暖、貼心、專業的「專屬 AI 股市理財專員」，負責輔助你的主人（Akira）進行理財規劃與股市分析。
 
@@ -219,6 +246,20 @@ def get_system_instruction(selected_lang: str = "繁體中文", price_targets: d
 {inst_ctx}
 
 {type_ctx}
+
+{ind_ctx}
+
+{macro_ctx}
+
+{margin_ctx}
+
+{fund_ctx}
+
+【分析師指令】
+你現在擁有完整的五維分析數據：技術面（精確指標數值）、籌碼面（法人+融資融券）、
+基本面（EPS/ROE/毛利率）、總體經濟（VIX/費半/匯率）、個人持股狀況。
+當主人詢問個股分析時，請盡量整合以上數據給出完整的多維度分析，
+像一位資深分析師那樣，用精確的數字支撐你的每一個觀點。
 """
 
     # 將三層記憶注入（積木化：動態插入，不修改原有邏輯）
@@ -230,7 +271,7 @@ def get_system_instruction(selected_lang: str = "繁體中文", price_targets: d
 
     return instruction
 
-def generate_advisor_response(chat_history: list, user_query: str, model_name: str = "gemini-2.5-flash", selected_lang: str = "繁體中文", price_targets: dict = None, institutional: dict = None, stock_type: dict = None) -> str:
+def generate_advisor_response(chat_history: list, user_query: str, model_name: str = "gemini-2.5-flash", selected_lang: str = "繁體中文", price_targets: dict = None, institutional: dict = None, stock_type: dict = None, indicators: dict = None, macro: dict = None, margin: dict = None, fundamental: dict = None) -> str:
     """
     與理財專員對話（支援聯網搜尋與歷史紀錄）
     chat_history: 格式為 [{"role": "user"|"model", "text": "內容"}]
@@ -255,7 +296,7 @@ def generate_advisor_response(chat_history: list, user_query: str, model_name: s
         chat = client.chats.create(
             model=model_name,
             config=types.GenerateContentConfig(
-                system_instruction=get_system_instruction(selected_lang, price_targets=price_targets, institutional=institutional, stock_type=stock_type),
+                system_instruction=get_system_instruction(selected_lang, price_targets=price_targets, institutional=institutional, stock_type=stock_type, indicators=indicators, macro=macro, margin=margin, fundamental=fundamental),
                 tools=[{"google_search": {}}]
             ),
             history=contents_history
