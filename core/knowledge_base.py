@@ -190,7 +190,7 @@ def auto_save_from_conversation(user_text: str, ai_text: str, stock_id: str = ""
     判斷一輪對話是否值得存入知識庫（自動品質過濾）。
     條件：AI 回答夠長（>150字）且包含分析內容。
     """
-    if len(ai_text) < 150:
+    if len(ai_text) < 50:
         return   # 回答太短，不值得存
 
     # 包含分析指標的回答才存

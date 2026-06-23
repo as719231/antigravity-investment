@@ -113,9 +113,33 @@ def get_system_instruction(selected_lang: str = "繁體中文", price_targets: d
     price_ctx = ""
     if price_targets and price_targets.get("close", 0) > 0:
         pt = price_targets
+
+        # 即時報價區塊（最重要！AI 必須引用此價格）
+        rt_price   = pt.get("realtime_price")
+        rt_change  = pt.get("realtime_change", 0)
+        rt_pct     = pt.get("realtime_pct", 0)
+        rt_time    = pt.get("realtime_time", "--")
+        rt_source  = pt.get("realtime_source", "")
+        rt_intraday= pt.get("realtime_intraday", False)
+        stock_id   = pt.get("stock_id", "")
+
+        if rt_price:
+            sign = "+" if rt_change >= 0 else ""
+            intraday_label = "盤中即時" if rt_intraday else "收盤價"
+            source_label   = "證交所官方 API" if "TWSE" in rt_source else "Yahoo Finance"
+            rt_block = f"""
+⚡ 目前{intraday_label}報價（{stock_id}）：
+- 最新價格: {rt_price:.2f} 元  漲跌: {sign}{rt_change:.2f} ({sign}{rt_pct:.2f}%)
+- 報價時間: {rt_time}  資料來源: {source_label}
+⚠️ 重要指示：當主人詢問現在股價時，請引用上面的最新價格 ({rt_price:.2f} 元)，不要引用過期或錯誤的股價。
+"""
+        else:
+            rt_block = ""
+
         price_ctx = f"""
 ====== 目前查詢標的技術面買賣參考價位 (由系統計算提供) ======
-- 現價: {pt.get('close')} 元
+{rt_block}
+- 收盤參考價: {pt.get('close')} 元
 - 第一批買進參考: {pt.get('buy_ideal')} 元 (主要支撐 {pt.get('primary_support')} 元上方貼近)
 - 逢低第二批參考: {pt.get('buy_dip')} 元 (次要支撐 {pt.get('secondary_support')} 元附近)
 - 止損參考: {pt.get('stop_loss')} 元 (主要支撐跌破 3% 時出場)
@@ -130,6 +154,7 @@ def get_system_instruction(selected_lang: str = "繁體中文", price_targets: d
   📌 **獲利了結**: 第一目標 [第一目標價位] | 第二目標 [第二目標價位]
 ====================================================================
 """
+
 
     # 三大法人上下文
     inst_ctx = ""

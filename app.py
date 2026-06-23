@@ -1503,6 +1503,23 @@ price_targets = analysis.get("price_targets", {})
 institutional = analysis.get("institutional", {"available": False})
 inst_analysis  = analysis.get("inst_analysis",  {"available": False})
 stock_type     = analysis.get("stock_type",     {})   # 股票類型自動判定結果
+# ── 將 stock_id 注入 price_targets（供記憶系統標記用）───────────────────
+price_targets["stock_id"] = stock_id
+
+# ── 注入即時報價到 price_targets（AI 永遠知道最新價格）───────────────
+try:
+    from core.realtime_provider import fetch_realtime_price as _fetch_rt
+    _rt_now = _fetch_rt(stock_id)
+    if _rt_now.get("success"):
+        price_targets["realtime_price"]    = _rt_now["price"]
+        price_targets["realtime_change"]   = _rt_now.get("change", 0)
+        price_targets["realtime_pct"]      = _rt_now.get("change_percent", 0)
+        price_targets["realtime_time"]     = _rt_now.get("update_time", "--")
+        price_targets["realtime_source"]   = _rt_now.get("source", "")
+        price_targets["realtime_intraday"] = _rt_now.get("is_intraday", False)
+except Exception:
+    pass  # 即時報價失敗不影響主要分析流程
+
 
 currency = LANG_DICT[selected_lang]["currency"]
 
