@@ -1997,6 +1997,215 @@ with tab_market:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
+
+# ==============================================================================
+# 🚨 價格警示檢查（每次頁面重載時自動比對）
+# ==============================================================================
+try:
+    from core.alert_manager import check_alerts, get_all_alerts, add_alert, remove_alert, clear_triggered, get_stats as alert_stats
+    # 用持股库存的現價來比對警示
+    _current_prices = {}
+    try:
+        from core.realtime_provider import fetch_realtime_price as _frp
+        import json as _json
+        _pf_path = config.PORTFOLIO_FILE
+        if os.path.exists(_pf_path):
+            with open(_pf_path, encoding="utf-8") as _f:
+                _pf = _json.load(_f)
+            for _sid in list(_pf.keys())[:5]:  # 最多檢查 5 支，避免太慢
+                _rt = _frp(_sid)
+                if _rt.get("success"):
+                    _current_prices[_sid] = _rt["price"]
+    except Exception:
+        pass
+
+    _triggered = check_alerts(_current_prices) if _current_prices else []
+    if _triggered:
+        for _t in _triggered:
+            _sign = "↑" if _t["condition"] == ">" else "↓"
+            st.toast(
+                f"🔔 警示觸發！ {_t['stock_id']} {_t['stock_name']} "
+                f"{'>漲到' if _t['condition'] == '>' else '<跌到'} "
+                f"{_t['price']} 元，現價: {_t.get('trigger_price', '--')} 元",
+                icon="🔔"
+            )
+except Exception:
+    pass
+
+# ==============================================================================
+# 🗺️ 台股板塊熱圖 (Sector Heatmap)
+# ==============================================================================
+with tab_market:
+    st.markdown("---")
+    st.markdown("### 🗺️ 台股板塊熱圖 · Sector Heatmap")
+
+    try:
+        from core.sector_heatmap import fetch_sector_indices
+        import plotly.graph_objects as go
+
+        _sectors = fetch_sector_indices()
+        if _sectors:
+            # 生成熱圖色块（用 Plotly Treemap/Bar）
+            _names    = [s["name"] for s in _sectors if s["name"] != "大盤"]
+            _changes  = [s["change_pct"] for s in _sectors if s["name"] != "大盤"]
+            _closes   = [s["close"] for s in _sectors if s["name"] != "大盤"]
+            _labels   = [f"{n}<br>{c:+.2f}%" for n, c in zip(_names, _changes)]
+
+            _colors = []
+            for c in _changes:
+                if c >= 2:    _colors.append("#b91c1c")
+                elif c >= 1:  _colors.append("#dc2626")
+                elif c >= 0:  _colors.append("#ef4444")
+                elif c >= -1: _colors.append("#16a34a")
+                elif c >= -2: _colors.append("#15803d")
+                else:         _colors.append("#166534")
+
+            _fig_heat = go.Figure(go.Bar(
+                x=_names,
+                y=[abs(c) + 0.1 for c in _changes],
+                text=_labels,
+                textposition="inside",
+                marker_color=_colors,
+                hovertemplate="<b>%{x}</b><br>分類指數: %{customdata:.2f}<br>漲跌: %{text}<extra></extra>",
+                customdata=_closes,
+            ))
+            _fig_heat.update_layout(
+                height=320,
+                margin=dict(l=10, r=10, t=10, b=40),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(15,23,42,0.6)",
+                font_color="white",
+                xaxis=dict(showgrid=False, tickangle=-30, tickfont_size=10),
+                yaxis=dict(showgrid=False, showticklabels=False),
+                showlegend=False,
+            )
+            st.plotly_chart(_fig_heat, use_container_width=True, config={"displayModeBar": False})
+
+            # 大盤指數漲跌
+            _market = next((s for s in _sectors if s["name"] == "大盤"), None)
+            if _market:
+                _mc = _market["change_pct"]
+                _color_m = "🔴" if _mc > 0 else "🟢"
+                st.caption(f"{_color_m} 大盤加權指數: {_market['close']:,.2f}  {_mc:+.2f}%")
+        else:
+            st.info("目前為非交易時間，類股資料將於盤後更新")
+
+    except Exception as _he:
+        st.caption(f"熱圖載入中... ({str(_he)[:50]})")
+
+# ==============================================================================
+# 📅 除權息/財報行事曆
+# ==============================================================================
+with tab_market:
+    st.markdown("---")
+    st.markdown("### 📅 除權息行事曆（未來 60 天）")
+    try:
+        from core.calendar_provider import fetch_upcoming_dividends
+        from core.profile_manager import get_profile_summary
+
+        _prof      = get_profile_summary()
+        _watched   = list(_prof.get("watched_stocks", {}).keys())
+        _divs      = fetch_upcoming_dividends(days_ahead=60)
+
+        if _divs:
+            # 若有監看股票，先顯示監看股票的除權息，再顯示其他
+            _divs_watched = [d for d in _divs if d["stock_id"] in _watched] if _watched else []
+            _divs_other   = [d for d in _divs if d["stock_id"] not in _watched][:20]
+            _divs_display = _divs_watched + _divs_other
+
+            if _divs_watched:
+                st.caption(f"🔖 你的監看股票共有 {len(_divs_watched)} 支即將除權息")
+
+            _cal_cols = st.columns([2, 3, 2, 2, 2, 2])
+            _headers  = ["代號", "名稱", "除權息日", "剩天", "現金股利", "類型"]
+            for col, h in zip(_cal_cols, _headers):
+                col.markdown(f"**{h}**")
+            st.markdown('<hr style="margin:4px 0; opacity:.2">', unsafe_allow_html=True)
+
+            for d in _divs_display[:25]:
+                c1, c2, c3, c4, c5, c6 = st.columns([2, 3, 2, 2, 2, 2])
+                days_left = d["days_left"]
+                urgency   = "🔴" if days_left <= 7 else ("🟡" if days_left <= 30 else "🟢")
+                is_mine   = d["stock_id"] in _watched
+                name_str  = f"⭐ {d['stock_name']}" if is_mine else d["stock_name"]
+
+                c1.write(d["stock_id"])
+                c2.write(name_str)
+                c3.write(d["ex_date"])
+                c4.write(f"{urgency} {days_left}天")
+                c5.write(f"{d['cash_div']} 元" if d.get("cash_div") and d["cash_div"] != "0" else "-")
+                c6.write(d.get("div_type", "-"))
+        else:
+            st.info("目前近 60 天內無除權息公告，或資料載入失敗")
+    except Exception as _ce:
+        st.caption(f"行事曆載入中... ({str(_ce)[:80]})")
+
+# ==============================================================================
+# 🔔 價格警示管理面板
+# ==============================================================================
+with tab_market:
+    st.markdown("---")
+    with st.expander("🔔 價格警示管理", expanded=False):
+        try:
+            from core.alert_manager import (
+                add_alert, remove_alert, get_all_alerts,
+                clear_triggered, get_stats as alert_stats
+            )
+            _ast = alert_stats()
+            st.caption(f"現有警示: {_ast['active']} 個活跳 | {_ast['triggered']} 個已觸發")
+
+            # 新增警示表單
+            with st.form("alert_form_main"):
+                _af1, _af2, _af3, _af4 = st.columns([2, 2, 1.5, 3])
+                with _af1:
+                    _alert_sid  = st.text_input("股票代號", value=stock_id, placeholder="e.g. 0050")
+                with _af2:
+                    _alert_name = st.text_input("名稱(可略)", placeholder="e.g. 元大台灣50")
+                with _af3:
+                    _alert_cond = st.selectbox("條件", ["↑ 漲到（高於）", "↓ 跌到（低於）"])
+                with _af4:
+                    _alert_price = st.number_input("目標價格(元)", min_value=0.0, step=0.5, format="%.2f")
+                _alert_note  = st.text_input("備註(可略)", placeholder="e.g. 第一批買進價位")
+                if st.form_submit_button("➕ 新增警示", use_container_width=True):
+                    if _alert_sid and _alert_price > 0:
+                        _cond_map = {"↑ 漲到（高於）": ">", "↓ 跌到（低於）": "<"}
+                        add_alert(
+                            stock_id=_alert_sid.strip(),
+                            stock_name=_alert_name.strip() or _alert_sid.strip(),
+                            condition=_cond_map[_alert_cond],
+                            price=_alert_price,
+                            note=_alert_note.strip()
+                        )
+                        st.toast(f"警示已設定！{_alert_sid} {'>漲到' if '>' in _cond_map[_alert_cond] else '<跌到'} {_alert_price}元", icon="🔔")
+                        st.rerun()
+                    else:
+                        st.warning("請填寫股票代號和目標價格")
+
+            # 現有警示清單
+            _alerts = get_all_alerts()
+            if _alerts:
+                for _al in _alerts:
+                    _acol1, _acol2, _acol3, _acol4 = st.columns([2, 3, 3, 1])
+                    _acol1.write(_al["stock_id"])
+                    _cond_label = f"{'>漲到' if _al['condition'] == '>' else '<跌到'} {_al['price']}元"
+                    _acol2.write(_cond_label)
+                    _status = "✅ 已觸發" if _al["triggered"] else "⏳ 監控中"
+                    _acol3.write(f"{_status} {_al.get('note', '')}")
+                    if _acol4.button("🗑️", key=f"del_alert_{_al['id']}"):
+                        remove_alert(_al["id"])
+                        st.rerun()
+
+                _ccol1, _ccol2 = st.columns(2)
+                with _ccol1:
+                    if st.button("🧹 清除已觸發", use_container_width=True):
+                        clear_triggered()
+                        st.rerun()
+            else:
+                st.info("尚無警示，請上方新增")
+
+        except Exception as _ae:
+            st.error(f"警示模組靈: {_ae}")
+
 # ==============================================================================
 # TAB 2: 💼 專屬持股追蹤看板
 # ==============================================================================
