@@ -1233,53 +1233,97 @@ def get_stock_last_price(stock_id: str) -> float:
         return float(df.iloc[-1]['close'])
     return 0.0
 
-# --- 盤中即時行情卡片繪製與 Fragment 宣告 ---
+# --- 盤中即時行情卡片繪製與 Fragment 宣告（v2.3 升級：TWSE 即時 + 時間戳）---
 def draw_realtime_card(stock_id: str, price_targets: dict, selected_lang: str, auto_refresh: bool):
+    from core.twse_realtime import get_market_status
     rt = fetch_realtime_price(stock_id)
     if not rt.get("success"):
         st.warning(f"無法取得即時報價: {rt.get('error')}")
         return
-        
-    price = rt["price"]
-    change = rt["change"]
+
+    price      = rt["price"]
+    change     = rt["change"]
     change_pct = rt["change_percent"]
-    symbol = rt["symbol"]
-    
+    symbol     = rt.get("symbol", f"{stock_id}.TW")
+    update_time = rt.get("update_time", "--:--:--")
+    source      = rt.get("source", "UNKNOWN")
+    is_intraday = rt.get("is_intraday", False)
+
+    # 顏色
     if change > 0:
-        color = "#EF4444"
-        sign = "+"
+        color, sign = "#EF4444", "+"
     elif change < 0:
-        color = "#10B981"
-        sign = ""
+        color, sign = "#10B981", ""
     else:
-        color = "#94A3B8"
-        sign = ""
-        
-    buy_ideal = price_targets.get("buy_ideal")
+        color, sign = "#94A3B8", ""
+
+    # 資料來源徽章
+    if source == "TWSE_REALTIME" and is_intraday:
+        source_badge = f'<span style="background:rgba(16,185,129,0.15); color:#10B981; border:1px solid rgba(16,185,129,0.3); border-radius:12px; padding:2px 8px; font-size:0.68rem; font-weight:700;">⚡ 證交所即時</span>'
+        time_label   = f'更新 {update_time}'
+    elif source == "TWSE_REALTIME":
+        source_badge = f'<span style="background:rgba(148,163,184,0.1); color:#94A3B8; border:1px solid rgba(148,163,184,0.2); border-radius:12px; padding:2px 8px; font-size:0.68rem; font-weight:700;">🔒 收盤後</span>'
+        time_label   = f'昨收 {rt.get("prev_close",""):.2f}'
+    else:
+        source_badge = f'<span style="background:rgba(245,158,11,0.1); color:#F59E0B; border:1px solid rgba(245,158,11,0.2); border-radius:12px; padding:2px 8px; font-size:0.68rem; font-weight:700;">⚠ 備用來源</span>'
+        time_label   = f'約 {update_time}'
+
+    # 買賣警示
+    buy_ideal  = price_targets.get("buy_ideal")
     sell_ideal = price_targets.get("sell_ideal")
-    
     status_alert = ""
     if buy_ideal and price <= buy_ideal:
         status_alert = f'<div style="background:rgba(239,68,68,0.1); color:#EF4444; border:1px solid #EF444433; padding:8px 12px; border-radius:6px; font-size:0.82rem; font-weight:600; text-align:center; margin-top:10px;">{REALTIME_DICT[selected_lang]["near_buy_target"]}</div>'
     elif sell_ideal and price >= sell_ideal:
         status_alert = f'<div style="background:rgba(245,158,11,0.1); color:#F59E0B; border:1px solid #F59E0B33; padding:8px 12px; border-radius:6px; font-size:0.82rem; font-weight:600; text-align:center; margin-top:10px;">{REALTIME_DICT[selected_lang]["near_sell_target"]}</div>'
-        
-    buy_desc = f"{buy_ideal} 元" if buy_ideal else "--"
+
+    buy_desc  = f"{buy_ideal} 元"  if buy_ideal  else "--"
     sell_desc = f"{sell_ideal} 元" if sell_ideal else "--"
-    
+
+    # 五檔掛單（TWSE 才有）
+    asks = rt.get("asks", [])
+    bids = rt.get("bids", [])
+    order_book_html = ""
+    if asks and bids:
+        ask_rows = "".join(
+            f'<tr><td style="color:#10B981;text-align:right;padding:1px 6px;font-size:0.72rem;">{p:.2f}</td><td style="color:#64748B;text-align:right;padding:1px 6px;font-size:0.72rem;">{q}</td></tr>'
+            for p, q in reversed(asks[:3])
+        )
+        bid_rows = "".join(
+            f'<tr><td style="color:#EF4444;text-align:right;padding:1px 6px;font-size:0.72rem;">{p:.2f}</td><td style="color:#64748B;text-align:right;padding:1px 6px;font-size:0.72rem;">{q}</td></tr>'
+            for p, q in bids[:3]
+        )
+        order_book_html = f'''
+        <div style="margin-top:10px; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px 12px;">
+          <div style="font-size:0.68rem; color:#64748B; font-weight:600; margin-bottom:4px;">📋 五檔掛單</div>
+          <table style="width:100%; border:none; background:transparent;">
+            <thead><tr><th style="color:#64748B;font-size:0.65rem;text-align:right;padding:1px 6px;">賣出</th><th style="color:#64748B;font-size:0.65rem;text-align:right;padding:1px 6px;">數量(張)</th></tr></thead>
+            <tbody>{ask_rows}</tbody>
+          </table>
+          <div style="border-top:1px solid rgba(255,255,255,0.06); margin:3px 0;"></div>
+          <table style="width:100%; border:none; background:transparent;">
+            <thead><tr><th style="color:#64748B;font-size:0.65rem;text-align:right;padding:1px 6px;">買進</th><th style="color:#64748B;font-size:0.65rem;text-align:right;padding:1px 6px;">數量(張)</th></tr></thead>
+            <tbody>{bid_rows}</tbody>
+          </table>
+        </div>'''
+
     st.markdown(f"""<div class="glass-card" style="padding:16px 20px; margin-bottom:16px; background: linear-gradient(135deg, rgba(20,25,50,0.8) 0%, rgba(10,12,30,0.9) 100%); border-left: 4px solid {color};">
-<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
 <div>
-<div style="font-size:0.8rem; color:#94A3B8; font-weight:600;">{REALTIME_DICT[selected_lang]["realtime_title"]} - {symbol}</div>
-<div style="display:flex; align-items:baseline; gap:12px; margin-top:4px;">
+<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+  <span style="font-size:0.78rem; color:#94A3B8; font-weight:600;">{REALTIME_DICT[selected_lang]['realtime_title']} - {stock_id}</span>
+  {source_badge}
+  <span style="font-size:0.65rem; color:#475569;">{time_label}</span>
+</div>
+<div style="display:flex; align-items:baseline; gap:12px;">
 <span style="font-size:2.0rem; font-weight:800; color:#F8FAFC; font-family: monospace; line-height:1;">{price:,.2f}</span>
 <span style="font-size:1.1rem; font-weight:700; color:{color}; font-family: monospace;">{sign}{change:+.2f} ({sign}{change_pct:+.2f}%)</span>
 </div>
 </div>
 <div style="display:flex; gap:15px; text-align:right;">
 <div>
-<div style="font-size:0.72rem; color:#64748B;">{REALTIME_DICT[selected_lang]["prev_close"]}</div>
-<div style="font-size:0.95rem; font-weight:600; color:#CBD5E1; font-family: monospace;">{rt["prev_close"]:,.2f}</div>
+<div style="font-size:0.72rem; color:#64748B;">{REALTIME_DICT[selected_lang]['prev_close']}</div>
+<div style="font-size:0.95rem; font-weight:600; color:#CBD5E1; font-family: monospace;">{rt['prev_close']:,.2f}</div>
 </div>
 <div>
 <div style="font-size:0.72rem; color:#64748B;">支撐位 (買進參考)</div>
@@ -1291,14 +1335,20 @@ def draw_realtime_card(stock_id: str, price_targets: dict, selected_lang: str, a
 </div>
 </div>
 </div>
+{order_book_html}
 {status_alert}
 </div>""", unsafe_allow_html=True)
-    
+
     if not auto_refresh:
         col1, col2 = st.columns([1, 4])
         with col1:
             if st.button("🔄 刷新即時報價", key="btn_manual_refresh_quote", use_container_width=True):
                 st.rerun()
+
+@st.fragment(run_every=5)
+def render_realtime_quote_5s(stock_id: str, price_targets: dict, selected_lang: str):
+    """極速模式：每 5 秒刷新（TWSE 盤中最準確）"""
+    draw_realtime_card(stock_id, price_targets, selected_lang, auto_refresh=True)
 
 @st.fragment(run_every=10)
 def render_realtime_quote_10s(stock_id: str, price_targets: dict, selected_lang: str):
@@ -1315,6 +1365,7 @@ def render_realtime_quote_60s(stock_id: str, price_targets: dict, selected_lang:
 @st.fragment()
 def render_realtime_quote_manual(stock_id: str, price_targets: dict, selected_lang: str):
     draw_realtime_card(stock_id, price_targets, selected_lang, auto_refresh=False)
+
 
 # --- 側邊欄設定區 ---
 with st.sidebar:
@@ -1363,6 +1414,7 @@ with st.sidebar:
     refresh_interval = 30
     if auto_refresh:
         interval_options = {
+            "⚡ 極速 5 秒 (盤中推薦)": 5,
             REALTIME_DICT[selected_lang]["interval_10s"]: 10,
             REALTIME_DICT[selected_lang]["interval_30s"]: 30,
             REALTIME_DICT[selected_lang]["interval_60s"]: 60
@@ -1470,7 +1522,9 @@ tab_market, tab_us_market, tab_futures, tab_portfolio, tab_chat, tab_news, tab_s
 with tab_market:
     # ── 盤中即時行情 ──────────────────────────────────────────
     if auto_refresh:
-        if refresh_interval == 10:
+        if refresh_interval == 5:
+            render_realtime_quote_5s(stock_id_input, price_targets, selected_lang)
+        elif refresh_interval == 10:
             render_realtime_quote_10s(stock_id_input, price_targets, selected_lang)
         elif refresh_interval == 60:
             render_realtime_quote_60s(stock_id_input, price_targets, selected_lang)
