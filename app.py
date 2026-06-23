@@ -1280,32 +1280,34 @@ def draw_realtime_card(stock_id: str, price_targets: dict, selected_lang: str, a
     buy_desc  = f"{buy_ideal} 元"  if buy_ideal  else "--"
     sell_desc = f"{sell_ideal} 元" if sell_ideal else "--"
 
-    # 五檔掛單（TWSE 才有）
+    # 五檔掛單（TWSE 才有）— div+flex 避開 Streamlit table 過濾
     asks = rt.get("asks", [])
     bids = rt.get("bids", [])
     order_book_html = ""
     if asks and bids:
-        ask_rows = "".join(
-            f'<tr><td style="color:#10B981;text-align:right;padding:1px 6px;font-size:0.72rem;">{p:.2f}</td><td style="color:#64748B;text-align:right;padding:1px 6px;font-size:0.72rem;">{q}</td></tr>'
-            for p, q in reversed(asks[:3])
+        def _ob_row(price_val, qty_val, clr):
+            return (
+                f'<div style="display:flex;justify-content:space-between;padding:2px 0;">'
+                f'<span style="color:{clr};font-size:0.72rem;font-family:monospace;">{price_val:.2f}</span>'
+                f'<span style="color:#64748B;font-size:0.72rem;">{qty_val} 張</span></div>'
+            )
+        ask_html = "".join(_ob_row(p, q, "#10B981") for p, q in reversed(asks[:3]))
+        bid_html = "".join(_ob_row(p, q, "#EF4444") for p, q in bids[:3])
+        order_book_html = (
+            '<div style="margin-top:10px;background:rgba(0,0,0,0.25);border-radius:8px;padding:8px 12px;">'
+            '<div style="display:flex;gap:12px;">'
+            '<div style="flex:1;">'
+            '<div style="font-size:0.65rem;color:#64748B;font-weight:600;margin-bottom:4px;text-align:center;">賣出掛單</div>'
+            + ask_html +
+            '</div>'
+            '<div style="width:1px;background:rgba(255,255,255,0.08);"></div>'
+            '<div style="flex:1;">'
+            '<div style="font-size:0.65rem;color:#64748B;font-weight:600;margin-bottom:4px;text-align:center;">買進掛單</div>'
+            + bid_html +
+            '</div>'
+            '</div>'
+            '</div>'
         )
-        bid_rows = "".join(
-            f'<tr><td style="color:#EF4444;text-align:right;padding:1px 6px;font-size:0.72rem;">{p:.2f}</td><td style="color:#64748B;text-align:right;padding:1px 6px;font-size:0.72rem;">{q}</td></tr>'
-            for p, q in bids[:3]
-        )
-        order_book_html = f'''
-        <div style="margin-top:10px; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px 12px;">
-          <div style="font-size:0.68rem; color:#64748B; font-weight:600; margin-bottom:4px;">📋 五檔掛單</div>
-          <table style="width:100%; border:none; background:transparent;">
-            <thead><tr><th style="color:#64748B;font-size:0.65rem;text-align:right;padding:1px 6px;">賣出</th><th style="color:#64748B;font-size:0.65rem;text-align:right;padding:1px 6px;">數量(張)</th></tr></thead>
-            <tbody>{ask_rows}</tbody>
-          </table>
-          <div style="border-top:1px solid rgba(255,255,255,0.06); margin:3px 0;"></div>
-          <table style="width:100%; border:none; background:transparent;">
-            <thead><tr><th style="color:#64748B;font-size:0.65rem;text-align:right;padding:1px 6px;">買進</th><th style="color:#64748B;font-size:0.65rem;text-align:right;padding:1px 6px;">數量(張)</th></tr></thead>
-            <tbody>{bid_rows}</tbody>
-          </table>
-        </div>'''
 
     st.markdown(f"""<div class="glass-card" style="padding:16px 20px; margin-bottom:16px; background: linear-gradient(135deg, rgba(20,25,50,0.8) 0%, rgba(10,12,30,0.9) 100%); border-left: 4px solid {color};">
 <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
@@ -2195,6 +2197,58 @@ with tab_chat:
     st.markdown(f"### {LANG_DICT[selected_lang]['chat_title']}")
     st.markdown(LANG_DICT[selected_lang]["chat_desc"])
     
+    # ── 三層記憶狀態列 ──────────────────────────────────────────────
+    try:
+        from core.memory_manager  import get_stats as mem_stats, clear_memory
+        from core.profile_manager import get_profile_summary
+        from core.knowledge_base  import get_stats as kb_stats, add_manual_note
+        _mem  = mem_stats()
+        _kb   = kb_stats()
+        _prof = get_profile_summary()
+
+        with st.expander("🧠 AI 記憶狀態", expanded=False):
+            mc1, mc2, mc3 = st.columns(3)
+            with mc1:
+                st.metric("📝 對話記憶", f"{_mem['total']} 輪",
+                          help=f"最新：{_mem.get('newest','--')}")
+            with mc2:
+                top_watched = list(_prof.get('watched_stocks', {}).keys())[:3]
+                st.metric("👤 個人檔案", f"{len(_prof.get('watched_stocks',{}))} 支股票",
+                          help=f"最常看：{top_watched}")
+            with mc3:
+                st.metric("📚 知識庫", f"{_kb['total']} 條",
+                          help=f"自動儲存 {_kb['auto_saved']} 條 | 手動 {_kb['manual_added']} 條")
+
+            top_stocks_list = sorted(_prof.get("watched_stocks", {}).items(), key=lambda x: x[1], reverse=True)[:5]
+            if top_stocks_list:
+                st.caption("常看股票：" + "、".join(f"{s}({n}次)" for s,n in top_stocks_list))
+            indicators_list = _prof.get("preferred_indicators", [])
+            if indicators_list:
+                st.caption("慣用指標：" + "、".join(indicators_list[:6]))
+
+            col_a, col_b = st.columns(2)
+            with col_a:
+                if st.button("🗑️ 清除對話記憶", key="btn_clear_memory", use_container_width=True):
+                    clear_memory()
+                    st.toast("對話記憶已清除", icon="🗑️")
+            with col_b:
+                if st.button("📋 清除本 Session 歷史", key="btn_clear_session", use_container_width=True):
+                    st.session_state.chat_history = []
+                    st.rerun()
+
+            with st.form("kb_note_form"):
+                note_title   = st.text_input("筆記標題", placeholder="例：0050 的波動週期觀察")
+                note_content = st.text_area("筆記內容", placeholder="在此寫下你的投資心得或分析...", height=80)
+                note_stock   = st.text_input("相關股票代號（可留空）", value=stock_id)
+                if st.form_submit_button("📥 存入知識庫", use_container_width=True):
+                    if note_title and note_content:
+                        add_manual_note(note_title, note_content, stock_id=note_stock)
+                        st.toast(f"「{note_title}」已存入知識庫！", icon="📚")
+                    else:
+                        st.warning("請填寫標題和內容")
+    except Exception:
+        pass  # 記憶模組不影響主要對話功能
+
     # 初始化聊天對話歷史
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []

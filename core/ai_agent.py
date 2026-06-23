@@ -1,8 +1,23 @@
-﻿from google import genai
+from google import genai
 from google.genai import types
 import json
 import os
 import config
+
+# 三層記憶系統模組（積木化引入）
+try:
+    from core.memory_manager  import get_memory_context,  save_conversation
+    from core.profile_manager import get_profile_context, update_profile_from_conversation
+    from core.knowledge_base  import get_rag_context,     auto_save_from_conversation
+    _MEMORY_ENABLED = True
+except ImportError:
+    _MEMORY_ENABLED = False
+    def get_memory_context(*a, **kw):  return ""
+    def save_conversation(*a, **kw):   pass
+    def get_profile_context(*a, **kw): return ""
+    def update_profile_from_conversation(*a, **kw): pass
+    def get_rag_context(*a, **kw):     return ""
+    def auto_save_from_conversation(*a, **kw): pass
 
 def get_client():
     """
@@ -180,6 +195,14 @@ def get_system_instruction(selected_lang: str = "繁體中文", price_targets: d
 
 {type_ctx}
 """
+
+    # 將三層記憶注入（積木化：動態插入，不修改原有邏輯）
+    if _MEMORY_ENABLED:
+        memory_ctx  = get_memory_context(max_rounds=8)
+        profile_ctx = get_profile_context()
+        # RAG 需要 user_query，永遠在 generate_advisor_response 裡提供
+        instruction = memory_ctx + profile_ctx + instruction
+
     return instruction
 
 def generate_advisor_response(chat_history: list, user_query: str, model_name: str = "gemini-2.5-flash", selected_lang: str = "繁體中文", price_targets: dict = None, institutional: dict = None, stock_type: dict = None) -> str:
@@ -212,8 +235,25 @@ def generate_advisor_response(chat_history: list, user_query: str, model_name: s
             ),
             history=contents_history
         )
-        response = chat.send_message(user_query)
-        return response.text
+
+        # 第三層 RAG：根據問題搜尋相關知識庫片段，附加在問題後面
+        _stock_id = price_targets.get("stock_id", "") if price_targets else ""
+        if _MEMORY_ENABLED:
+            rag_ctx = get_rag_context(user_query, stock_id=_stock_id, top_k=3)
+            enriched_query = (user_query + "\n\n" + rag_ctx) if rag_ctx else user_query
+        else:
+            enriched_query = user_query
+
+        response = chat.send_message(enriched_query)
+        response_text = response.text
+
+        # 三層記憶：對話完成後自動儲存（積木化，與 API 呼叫完全解耦）
+        if _MEMORY_ENABLED:
+            save_conversation(user_query, response_text, stock_id=_stock_id)
+            update_profile_from_conversation(user_query, response_text, stock_id=_stock_id)
+            auto_save_from_conversation(user_query, response_text, stock_id=_stock_id)
+
+        return response_text
         
     except Exception as e:
         print(f"理財專員對話失敗: {str(e)}")
