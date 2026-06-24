@@ -1147,7 +1147,7 @@ st.markdown("""
             .sub-header { font-size: 0.9rem !important; margin-bottom: 12px !important; }
             [data-testid="stMainBlockContainer"],
             .main .block-container {
-                padding-bottom: 72px !important;
+                padding-bottom: 140px !important;
                 padding-left: 12px !important;
                 padding-right: 12px !important;
             }
@@ -1169,8 +1169,10 @@ st.markdown("""
                 display: flex !important;
                 justify-content: space-around !important;
                 align-items: stretch !important;
-                padding: 4px 0 env(safe-area-inset-bottom, 4px) !important;
-                height: 60px !important;
+                padding: 4px 0 !important;
+                padding-bottom: max(env(safe-area-inset-bottom, 8px), 8px) !important;
+                height: auto !important;
+                min-height: 60px !important;
                 gap: 0 !important;
                 margin: 0 !important;
                 border-radius: 0 !important;
