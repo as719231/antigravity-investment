@@ -198,6 +198,7 @@ def render(lang: str):
     """
     渲染期貨市場看盤分頁。
     唯一對外接口：只需傳入語言設定。
+    v2.8: 加入總體經濟多空信號儀表板（VIX/SOX/台幣/NASDAQ/SP500）
     """
     t = _T.get(lang, _T["繁體中文"])
     st.markdown(f"### {t['tab_title']}")
@@ -207,14 +208,9 @@ def render(lang: str):
         st.rerun()
 
     with st.spinner("載入期貨資料..." if lang == "繁體中文" else "Loading futures data..."):
-        # VIX
-        vix_r = fetch_multiple_futures(["VX"])
-        vix_result = vix_r[0] if vix_r else {}
-
-        # 台灣期貨
-        tw_results = fetch_multiple_futures(["TWF", "STXF"])
-
-        # 美股指數期貨
+        vix_r          = fetch_multiple_futures(["VX"])
+        vix_result     = vix_r[0] if vix_r else {}
+        tw_results     = fetch_multiple_futures(["TWF", "STXF"])
         us_idx_results = fetch_multiple_futures(["ES", "NQ", "YM", "RTY"])
 
         # 商品

@@ -4,7 +4,7 @@
       "stock_id": "00907",
       "stock_name": "永豐優息存股",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "0.205000"
     },
@@ -12,7 +12,7 @@
       "stock_id": "1104",
       "stock_name": "環泥",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "1.850000"
     },
@@ -20,7 +20,7 @@
       "stock_id": "1326",
       "stock_name": "台化",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "0.600000"
     },
@@ -28,7 +28,7 @@
       "stock_id": "2103",
       "stock_name": "台橡",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "0.270000"
     },
@@ -36,7 +36,7 @@
       "stock_id": "2423",
       "stock_name": "固緯",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "2.500000"
     },
@@ -44,7 +44,7 @@
       "stock_id": "3019",
       "stock_name": "亞光",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "4.600000"
     },
@@ -52,7 +52,7 @@
       "stock_id": "3530",
       "stock_name": "晶相光",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "0.800000"
     },
@@ -60,7 +60,7 @@
       "stock_id": "3705",
       "stock_name": "永信",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "3.000000"
     },
@@ -68,7 +68,7 @@
       "stock_id": "4557",
       "stock_name": "永新-KY",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "2.000000"
     },
@@ -76,7 +76,7 @@
       "stock_id": "4571",
       "stock_name": "鈞興-KY",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "5.271732"
     },
@@ -84,7 +84,7 @@
       "stock_id": "4952",
       "stock_name": "凌通",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "1.000000"
     },
@@ -92,7 +92,7 @@
       "stock_id": "6184",
       "stock_name": "大豐電",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "3.000000"
     },
@@ -100,7 +100,7 @@
       "stock_id": "6196",
       "stock_name": "帆宣",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "6.448786"
     },
@@ -108,7 +108,7 @@
       "stock_id": "6670",
       "stock_name": "復盛應用",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "16.000000"
     },
@@ -116,7 +116,7 @@
       "stock_id": "8249",
       "stock_name": "菱光",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "2.078778"
     },
@@ -124,7 +124,7 @@
       "stock_id": "9917",
       "stock_name": "中保科",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "5.700000"
     },
@@ -132,7 +132,7 @@
       "stock_id": "9930",
       "stock_name": "中聯資源",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "4.000000"
     },
@@ -140,10 +140,10 @@
       "stock_id": "9934",
       "stock_name": "成霖",
       "ex_date": "2026-06-24",
-      "days_left": 1,
+      "days_left": 0,
       "div_type": "息",
       "cash_div": "0.100000"
     }
   ],
-  "date": "2026-06-23"
+  "date": "2026-06-24"
 }

@@ -859,14 +859,40 @@ def render(lang: str):
     """
     渲染美股看盤分頁（完整技術分析版）。
     唯一對外接口：只需傳入語言設定。
+    v2.8: 升級大盤指數加入解讀標籤 + 基本面面板 + 總經多空信號
     """
     t = _T.get(lang, _T["繁體中文"])
 
-    # ── 大盤指數（最頂端，提供背景判斷）──────────────────────────
+    # ── 大盤指數 + 總體環境解讀（最頂端）────────────────────────
     with st.spinner("載入大盤指數..."):
         indices = fetch_market_indices()
     if indices:
         _render_market_indices(indices, t)
+
+    # 總體環境多空信號（v2.8 新增）
+    try:
+        from core.macro_provider import fetch_macro_context
+        _macro = fetch_macro_context()
+        if _macro.get("available"):
+            _vix_v  = _macro.get("vix",  {}).get("price", 20)
+            _sox_c  = _macro.get("sox",  {}).get("change_pct", 0)
+            _nq_c   = _macro.get("nasdaq",{}).get("change_pct", 0)
+            _twd_c  = _macro.get("usd_twd",{}).get("change_pct", 0)
+            _sp_c   = _macro.get("sp500",{}).get("change_pct", 0)
+            _bulls  = sum([_sox_c > 0, _nq_c > 0, _sp_c > 0, _vix_v < 20, _twd_c < 0])
+            _v_color = "#EF4444" if _bulls >= 4 else "#10B981" if _bulls <= 1 else "#F59E0B"
+            _v_text  = (
+                f"🔴 強多：費半{_sox_c:+.1f}%、NASDAQ{_nq_c:+.1f}%，外資進場意願高"  if _bulls >= 4 else
+                f"🟢 強空：VIX={_vix_v:.1f}高恐慌，多數指標偏空，注意控制部位"         if _bulls <= 1 else
+                f"🟡 多空互見（多頭訊號 {_bulls}/5）：費半{_sox_c:+.1f}%、VIX={_vix_v:.1f}"
+            )
+            st.markdown(f"""<div style="padding:8px 14px; margin:6px 0 12px 0; background:rgba(30,41,59,0.5);
+border-left:3px solid {_v_color}; border-radius:6px; font-size:0.8rem; color:#F8FAFC;">
+🌐 <b>總體環境</b>：{_v_text}
+&nbsp;&nbsp;｜&nbsp;&nbsp;SOX {_sox_c:+.1f}% &nbsp; VIX {_vix_v:.1f} ({_macro.get('vix_level','')}) &nbsp; 台幣 {_macro.get('twd_trend','')[:8]}
+</div>""", unsafe_allow_html=True)
+    except Exception:
+        pass
 
     st.markdown("---")
 
@@ -884,7 +910,6 @@ def render(lang: str):
     with col_btn:
         do_analyze = st.button(t["input_btn"], type="primary", use_container_width=True, key="us_analyze_btn")
 
-    # 若有輸入就分析（首次或按鈕）
     if ticker_input:
         st.session_state["us_last_ticker"] = ticker_input
 
@@ -927,6 +952,71 @@ def render(lang: str):
 
         # 機構持股
         _render_institutional(inst, t)
+
+        # ── 基本面面板（v2.8 新增）────────────────────────────
+        try:
+            from core.fundamental_provider import fetch_fundamentals, fetch_monthly_revenue
+            _fund = fetch_fundamentals(ticker)
+            if _fund.get("available"):
+                st.markdown("---")
+                st.markdown("#### 💰 基本面速覽")
+                _fua, _fub, _fuc, _fud, _fue = st.columns(5)
+
+                def _us_card(col, title, val, sub, color="#F8FAFC"):
+                    col.markdown(f"""<div class="glass-card" style="padding:12px; text-align:center;">
+<div style="font-size:0.65rem; color:#94A3B8;">{title}</div>
+<div style="font-size:1.05rem; font-weight:800; color:{color}; margin:3px 0;">{val}</div>
+<div style="font-size:0.63rem; color:#64748B;">{sub}</div>
+</div>""", unsafe_allow_html=True)
+
+                pe   = _fund.get("trailing_pe")
+                fpe  = _fund.get("forward_pe")
+                roe  = _fund.get("roe_pct")
+                gm   = _fund.get("gross_margin_pct")
+                eps  = _fund.get("trailing_eps")
+                feps = _fund.get("forward_eps")
+                dy   = _fund.get("dividend_yield_pct")
+                rg   = _fund.get("revenue_growth_pct")
+                eg   = _fund.get("earnings_growth_pct")
+                hi52 = _fund.get("week52_high","--")
+                lo52 = _fund.get("week52_low","--")
+                pos  = _fund.get("position_52w_pct", 50)
+
+                _pe_c  = "#EF4444" if pe and pe > 40 else "#F59E0B" if pe and pe > 25 else "#10B981"
+                _roe_c = "#10B981" if roe and roe >= 15 else "#F59E0B" if roe and roe >= 8 else "#EF4444"
+                _gm_c  = "#10B981" if gm and gm >= 40 else "#F59E0B" if gm and gm >= 20 else "#EF4444"
+                _rg_c  = "#10B981" if rg and rg > 10 else "#F59E0B" if rg and rg > 0 else "#EF4444"
+
+                _us_card(_fua, "本益比 PE(TTM)", f"{pe:.1f}x" if pe else "--", _fund.get("pe_status","")[:10], _pe_c)
+                _us_card(_fub, "ROE 股東報酬", f"{roe:.1f}%" if roe else "--", "優秀✅" if roe and roe >= 15 else "普通", _roe_c)
+                _us_card(_fuc, "毛利率", f"{gm:.1f}%" if gm else "--", "高護城河" if gm and gm >= 40 else "正常", _gm_c)
+                _us_card(_fud, "EPS", f"${eps}" if eps else "--", f"預估 ${feps}" if feps else "trailing", "#6366F1")
+                _us_card(_fue, "殖利率", f"{dy:.2f}%" if dy else "--", "高息✅" if dy and dy >= 3 else "一般", "#10B981" if dy and dy >= 3 else "#94A3B8")
+
+                # 成長性 + 52週位置
+                pos_color = "#EF4444" if pos > 80 else "#F59E0B" if pos > 50 else "#10B981"
+                _cg1, _cg2 = st.columns(2)
+                with _cg1:
+                    _eg_color = "#10B981" if eg and eg > 0 else "#EF4444"
+                    _eg_html  = f'｜獲利年增 <span style="color:{_eg_color}; font-weight:700;">{eg:+.1f}%</span>' if eg else ''
+                    st.markdown(f"""<div style="padding:8px 12px; background:rgba(30,41,59,0.5); border-radius:8px; font-size:0.78rem; color:#94A3B8;">
+📈 <b>成長性</b>：營收年增 <span style="color:{_rg_c}; font-weight:700;">{rg:+.1f}%</span>
+{_eg_html}
+</div>""", unsafe_allow_html=True)
+                with _cg2:
+                    st.markdown(f"""<div style="padding:8px 12px; background:rgba(30,41,59,0.5); border-radius:8px; font-size:0.78rem;">
+<div style="display:flex; justify-content:space-between; color:#94A3B8; margin-bottom:4px;">
+  <span>52週低 ${lo52}</span>
+  <span style="color:{pos_color}; font-weight:700;">位置 {pos:.0f}%</span>
+  <span>52週高 ${hi52}</span>
+</div>
+<div style="background:rgba(255,255,255,0.08); border-radius:4px; height:5px; overflow:hidden;">
+  <div style="width:{pos:.0f}%; height:100%; background:{pos_color}; border-radius:4px;"></div>
+</div>
+</div>""", unsafe_allow_html=True)
+
+        except Exception:
+            pass
 
     # 延遲說明
     st.markdown(f"<div style='font-size:0.75rem; color:#64748B; margin-top:4px;'>{t['delay_note']}</div>", unsafe_allow_html=True)
