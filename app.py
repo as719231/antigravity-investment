@@ -2623,6 +2623,36 @@ with tab_portfolio:
             else:
                 st.error(REALTIME_DICT[selected_lang]['error_empty_id'])
 
+    # ── 🛡️ 停損追蹤看板（v3.0 方案B）─────────────────────
+    try:
+        from ui.tab_stop_loss import render as _render_sl
+        from core.stop_loss_manager import check_stops as _check_sl
+
+        # 建立現價字典
+        _sl_prices = {}
+        _pf_raw = {}
+        if os.path.exists(config.PORTFOLIO_FILE):
+            try:
+                _pf_raw = json.load(open(config.PORTFOLIO_FILE, encoding="utf-8"))
+                for _slid in _pf_raw:
+                    _slp = get_stock_last_price(_slid)
+                    if _slp:
+                        _sl_prices[_slid] = _slp
+            except Exception:
+                pass
+
+        # 自動觸發：Toast 彈窗
+        _sl_triggered = _check_sl(_sl_prices)
+        for _sltr in _sl_triggered:
+            st.toast(_sltr["message"], icon="🔴")
+
+        # 渲染停損看板
+        if _pf_raw:
+            _render_sl(portfolio=_pf_raw, prices=_sl_prices, lang=selected_lang)
+
+    except Exception:
+        pass
+
 # ==============================================================================
 # TAB 3: 💬 理財專員對話室
 # ==============================================================================

@@ -310,5 +310,35 @@
       "secondary_risks": [],
       "secondary_tips": []
     }
+  },
+  "2883": {
+    "cached_at": "2026-06-24T11:22:07.174127",
+    "result": {
+      "stock_id": "2883",
+      "company_name": "凱基金",
+      "primary_type": "Unknown",
+      "primary_confidence": 30,
+      "secondary_type": null,
+      "secondary_confidence": 0,
+      "model_blend": {
+        "primary_weight": 1.0,
+        "secondary_weight": 0.0
+      },
+      "reason": [
+        "產業分類：金融保險"
+      ],
+      "market_cap_b": 0.0,
+      "risks": [
+        "無法確認股票類型，使用通用分析模型",
+        "建議先研究基本面（財報、EPS趨勢）再進場"
+      ],
+      "operation_tips": [
+        "使用通用操作策略，建議保守",
+        "停利設定：+8~12%，停損：-5~7%",
+        "建議先研究基本面再進場，不追高"
+      ],
+      "secondary_risks": [],
+      "secondary_tips": []
+    }
   }
 }
