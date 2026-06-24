@@ -1147,7 +1147,7 @@ st.markdown("""
             .sub-header { font-size: 0.9rem !important; margin-bottom: 12px !important; }
             [data-testid="stMainBlockContainer"],
             .main .block-container {
-                padding-bottom: 140px !important;
+                padding-bottom: 200px !important;
                 padding-left: 12px !important;
                 padding-right: 12px !important;
             }
@@ -1160,17 +1160,16 @@ st.markdown("""
             [data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; gap: 8px !important; }
             .stTabs [data-baseweb="tab-list"] {
                 position: fixed !important;
-                bottom: 0 !important;
+                bottom: 54px !important;
                 left: 0 !important;
                 right: 0 !important;
-                z-index: 9999 !important;
+                z-index: 99999 !important;
                 background: #0F172A !important;
                 border-top: 1px solid rgba(255,255,255,0.08) !important;
                 display: flex !important;
                 justify-content: space-around !important;
                 align-items: stretch !important;
                 padding: 4px 0 !important;
-                padding-bottom: max(env(safe-area-inset-bottom, 8px), 8px) !important;
                 height: auto !important;
                 min-height: 60px !important;
                 gap: 0 !important;
