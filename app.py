@@ -1222,15 +1222,29 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- 資料快取 ---
-@st.cache_data(ttl=900)  # 15 分鐘更新一次
+@st.cache_data(ttl=1800)  # 30 分鐘更新一次
 def get_cached_stock_signals(stock_id: str):
     return evaluate_stock_signals(stock_id)
 
-@st.cache_data(ttl=900)
+@st.cache_data(ttl=30)    # 30秒：直接用 TWSE 即時报價（快）
 def get_stock_last_price(stock_id: str) -> float:
-    df = fetch_stock_data(stock_id, days=10)
-    if not df.empty:
-        return float(df.iloc[-1]['close'])
+    """
+    取得股票最新價：優先 TWSE 即時 API（< 1秒），失敗才用 FinMind。
+    """
+    try:
+        from core.realtime_provider import fetch_realtime_price as _frp
+        _rt = _frp(stock_id)
+        if _rt.get("success") and _rt.get("price", 0) > 0:
+            return float(_rt["price"])
+    except Exception:
+        pass
+    # 備援：FinMind 歷史收盤價
+    try:
+        _df = fetch_stock_data(stock_id, days=5)
+        if not _df.empty:
+            return float(_df.iloc[-1]['close'])
+    except Exception:
+        pass
     return 0.0
 
 # --- 盤中即時行情卡片繪製與 Fragment 宣告（v2.3 升級：TWSE 即時 + 時間戳）---
