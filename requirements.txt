@@ -1,5 +1,4 @@
-finmind==1.9.6
-google-generativeai==0.8.6
+google-genai>=1.0.0
 python-dotenv==1.2.2
 streamlit==1.45.1
 plotly==5.24.1
@@ -7,3 +6,4 @@ pandas>=2.0.0
 numpy>=1.24.0
 yfinance>=0.2.40
 requests>=2.31.0
+finmind==1.9.6
