@@ -4,11 +4,24 @@ import datetime
 from FinMind.data import DataLoader
 from core.risk_calculator import calculate_indicators
 
+
+def _get_dataloader() -> DataLoader:
+    """取得已登入 Token 的 DataLoader"""
+    dl = DataLoader()
+    try:
+        import config
+        token = getattr(config, 'FINMIND_TOKEN', '')
+        if token:
+            dl.login_by_token(api_token=token)
+    except Exception:
+        pass
+    return dl
+
 def fetch_stock_data(stock_id: str, days: int = 120) -> pd.DataFrame:
     """
     抓取指定台股代號的歷史K線資料
     """
-    dl = DataLoader()
+    dl = _get_dataloader()
     end_date = datetime.date.today().strftime('%Y-%m-%d')
     start_date = (datetime.date.today() - datetime.timedelta(days=days)).strftime('%Y-%m-%d')
     

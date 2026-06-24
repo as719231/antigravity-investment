@@ -6,12 +6,9 @@ __pycache__/
 .Python
 *.egg-info/
 
-# 環境變數與 API Key
+# 環境變數與 API Key（絕對不能上傳！）
 .env
 *.env
-secrets.toml
-
-# Streamlit 快取
 .streamlit/secrets.toml
 
 # 系統檔案
@@ -19,8 +16,8 @@ secrets.toml
 Thumbs.db
 desktop.ini
 
-# 暫存腳本
+# 工具腳本
 create_shortcut.ps1
 
-# 日誌
+# Log
 *.log

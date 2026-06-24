@@ -45,7 +45,11 @@ def fetch_margin_data(stock_id: str, days: int = 15) -> dict:
 
     try:
         from FinMind.data import DataLoader
+        import config as _cfg
         dl = DataLoader()
+        _token = getattr(_cfg, 'FINMIND_TOKEN', '')
+        if _token:
+            dl.login_by_token(api_token=_token)
 
         end_date   = _today()
         start_date = (datetime.date.today() - datetime.timedelta(days=days + 15)).strftime("%Y-%m-%d")
