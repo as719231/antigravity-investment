@@ -2123,8 +2123,47 @@ with tab_market:
                 months = _rev.get("months",[])[-3:]
                 revs   = [f"{r/1e6:.1f}M" if r >= 1e6 else f"{r/1e3:.0f}K" for r in _rev.get("revenues",[])[-3:]]
                 rev_pairs = " → ".join(f"{m[-5:]} {v}" for m, v in zip(months, revs))
+                rg_str = f"{rg:+.1f}%" if rg is not None else "--"
                 st.markdown(f"""<div style="margin-top:6px; padding:7px 14px; background:rgba(30,41,59,0.4); border-radius:8px; font-size:0.78rem; color:#94A3B8;">
-📅 <b>近期月營收</b>：{rev_pairs} &nbsp;｜&nbsp; <span style="color:{rg_color}; font-weight:700;">年增率 {rg:+.1f}%</span>
+📅 <b>近期月營收</b>：{rev_pairs} &nbsp;｜&nbsp; <span style="color:{rg_color}; font-weight:700;">年增率 {rg_str}</span>
+</div>""", unsafe_allow_html=True)
+
+            # 第二行：財務健康指標
+            _pb_v  = _fund.get("price_to_book")
+            _peg_v = _fund.get("peg_ratio")
+            _cr_v  = _fund.get("current_ratio")
+            _fcf_v = _fund.get("fcf_b")
+            _hs    = _fund.get("health_score")
+            _hl    = _fund.get("health_label","")
+            _roa_v = _fund.get("roa_pct")
+
+            _row2_items = []
+            if _pb_v:   _row2_items.append(("P/B 淨值比",  f"{_pb_v:.1f}x",  "合理✅" if _pb_v < 3 else "偏高⚠️",  "#10B981" if _pb_v < 3 else "#F59E0B"))
+            if _peg_v:  _row2_items.append(("PEG 成長比", f"{_peg_v:.2f}", "低估成長✅" if _peg_v < 1 else "合理" if _peg_v < 2 else "偏高⚠️", "#10B981" if _peg_v < 1 else "#94A3B8"))
+            if _cr_v:   _row2_items.append(("流動比率",    f"{_cr_v:.1f}x",  "充裕✅" if _cr_v >= 2 else "偏低⚠️" if _cr_v < 1 else "正常",  "#10B981" if _cr_v >= 2 else "#F59E0B"))
+            if _fcf_v:  _row2_items.append(("自由現金流",  f"{_fcf_v:+.0f}億", "✅正" if _fcf_v > 0 else "❌負",    "#10B981" if _fcf_v > 0 else "#EF4444"))
+            if _roa_v:  _row2_items.append(("ROA 資產報酬",f"{_roa_v:.1f}%", "優秀✅" if _roa_v >= 10 else "普通",   "#10B981" if _roa_v >= 10 else "#94A3B8"))
+
+            if _row2_items:
+                r2cols = st.columns(len(_row2_items))
+                for col, (ttl, val, sub, clr) in zip(r2cols, _row2_items):
+                    col.markdown(f"""<div class="glass-card" style="padding:10px; text-align:center; border-top:2px solid {clr}22;">
+<div style="font-size:0.63rem; color:#94A3B8;">{ttl}</div>
+<div style="font-size:0.95rem; font-weight:800; color:{clr}; margin:3px 0;">{val}</div>
+<div style="font-size:0.62rem; color:#64748B;">{sub}</div>
+</div>""", unsafe_allow_html=True)
+
+            # 財務健康評分條
+            if _hs is not None:
+                _hs_color = "#10B981" if _hs >= 75 else "#F59E0B" if _hs >= 55 else "#EF4444"
+                st.markdown(f"""<div style="margin-top:6px; padding:8px 14px; background:rgba(30,41,59,0.4); border-radius:8px;">
+<div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:4px;">
+  <span style="color:#94A3B8;">🏦 財務健康綜合評分</span>
+  <span style="color:{_hs_color}; font-weight:700;">{_hs}/100 {_hl}</span>
+</div>
+<div style="background:rgba(255,255,255,0.08); border-radius:4px; height:5px; overflow:hidden;">
+  <div style="width:{_hs}%; height:100%; background:{_hs_color}; border-radius:4px;"></div>
+</div>
 </div>""", unsafe_allow_html=True)
 
     except Exception as _fe:

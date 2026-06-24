@@ -869,27 +869,28 @@ def render(lang: str):
     if indices:
         _render_market_indices(indices, t)
 
-    # 總體環境多空信號（v2.8 新增）
+    # 總體環境多空信號（v2.9: 加入道瓊 DJI，升級為6格）
     try:
         from core.macro_provider import fetch_macro_context
         _macro = fetch_macro_context()
         if _macro.get("available"):
-            _vix_v  = _macro.get("vix",  {}).get("price", 20)
-            _sox_c  = _macro.get("sox",  {}).get("change_pct", 0)
-            _nq_c   = _macro.get("nasdaq",{}).get("change_pct", 0)
-            _twd_c  = _macro.get("usd_twd",{}).get("change_pct", 0)
-            _sp_c   = _macro.get("sp500",{}).get("change_pct", 0)
-            _bulls  = sum([_sox_c > 0, _nq_c > 0, _sp_c > 0, _vix_v < 20, _twd_c < 0])
-            _v_color = "#EF4444" if _bulls >= 4 else "#10B981" if _bulls <= 1 else "#F59E0B"
+            _vix_v  = _macro.get("vix",     {}).get("price",      20)
+            _sox_c  = _macro.get("sox",     {}).get("change_pct",  0)
+            _nq_c   = _macro.get("nasdaq",  {}).get("change_pct",  0)
+            _twd_c  = _macro.get("usd_twd", {}).get("change_pct",  0)
+            _sp_c   = _macro.get("sp500",   {}).get("change_pct",  0)
+            _dj_c   = _macro.get("dji",     {}).get("change_pct",  0)
+            _bulls  = sum([_sox_c > 0, _nq_c > 0, _sp_c > 0, _dj_c > 0, _vix_v < 20, _twd_c < 0])
+            _v_color = "#EF4444" if _bulls >= 5 else "#10B981" if _bulls <= 1 else "#F59E0B"
             _v_text  = (
-                f"🔴 強多：費半{_sox_c:+.1f}%、NASDAQ{_nq_c:+.1f}%，外資進場意願高"  if _bulls >= 4 else
-                f"🟢 強空：VIX={_vix_v:.1f}高恐慌，多數指標偏空，注意控制部位"         if _bulls <= 1 else
-                f"🟡 多空互見（多頭訊號 {_bulls}/5）：費半{_sox_c:+.1f}%、VIX={_vix_v:.1f}"
+                f"🔴 強多：費半{_sox_c:+.1f}%、NASDAQ{_nq_c:+.1f}%、道瓊{_dj_c:+.1f}%，外資進場意願高"  if _bulls >= 5 else
+                f"🟢 強空：VIX={_vix_v:.1f}高恐慌，多數指標偏空，注意控制部位"                          if _bulls <= 1 else
+                f"🟡 多空互見（多頭訊號 {_bulls}/6）：費半{_sox_c:+.1f}%、道瓊{_dj_c:+.1f}%、VIX={_vix_v:.1f}"
             )
             st.markdown(f"""<div style="padding:8px 14px; margin:6px 0 12px 0; background:rgba(30,41,59,0.5);
 border-left:3px solid {_v_color}; border-radius:6px; font-size:0.8rem; color:#F8FAFC;">
 🌐 <b>總體環境</b>：{_v_text}
-&nbsp;&nbsp;｜&nbsp;&nbsp;SOX {_sox_c:+.1f}% &nbsp; VIX {_vix_v:.1f} ({_macro.get('vix_level','')}) &nbsp; 台幣 {_macro.get('twd_trend','')[:8]}
+&nbsp;&nbsp;｜&nbsp;&nbsp;SOX {_sox_c:+.1f}% &nbsp; 道瓊 {_dj_c:+.1f}% &nbsp; VIX {_vix_v:.1f} ({_macro.get('vix_level','')[:8]}) &nbsp; 台幣 {_macro.get('twd_trend','')[:8]}
 </div>""", unsafe_allow_html=True)
     except Exception:
         pass

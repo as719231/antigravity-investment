@@ -198,7 +198,7 @@ def render(lang: str):
     """
     渲染期貨市場看盤分頁。
     唯一對外接口：只需傳入語言設定。
-    v2.8: 加入總體經濟多空信號儀表板（VIX/SOX/台幣/NASDAQ/SP500）
+    v2.9: 總體儀表板升級為6格（加道瓊 DJI）
     """
     t = _T.get(lang, _T["繁體中文"])
     st.markdown(f"### {t['tab_title']}")
@@ -212,12 +212,95 @@ def render(lang: str):
         vix_result     = vix_r[0] if vix_r else {}
         tw_results     = fetch_multiple_futures(["TWF", "STXF"])
         us_idx_results = fetch_multiple_futures(["ES", "NQ", "YM", "RTY"])
+        cmd_results    = fetch_multiple_futures(["GC", "SI", "CL", "BZ"])
+        fx_results     = fetch_multiple_futures(["DX", "6E", "6J"])
 
-        # 商品
-        cmd_results = fetch_multiple_futures(["GC", "SI", "CL", "BZ"])
+    # ── 🌐 總體環境多空信號儀表板（v2.9: 6格）─────────────────────
+    try:
+        from core.macro_provider import fetch_macro_context
+        _macro = fetch_macro_context()
+        if _macro.get("available"):
+            st.markdown("#### 🌐 總體環境多空信號儀表板")
 
-        # 外匯
-        fx_results = fetch_multiple_futures(["DX", "6E", "6J"])
+            _mc1, _mc2, _mc3, _mc4, _mc5, _mc6 = st.columns(6)
+
+            _vix_v  = _macro.get("vix",     {}).get("price",      20)
+            _vix_c  = _macro.get("vix",     {}).get("change_pct",  0)
+            _sox_v  = _macro.get("sox",     {}).get("price",       0)
+            _sox_c  = _macro.get("sox",     {}).get("change_pct",  0)
+            _twd_v  = _macro.get("usd_twd", {}).get("price",      31)
+            _twd_c  = _macro.get("usd_twd", {}).get("change_pct",  0)
+            _nq_v   = _macro.get("nasdaq",  {}).get("price",       0)
+            _nq_c   = _macro.get("nasdaq",  {}).get("change_pct",  0)
+            _sp_v   = _macro.get("sp500",   {}).get("price",       0)
+            _sp_c   = _macro.get("sp500",   {}).get("change_pct",  0)
+            _dj_v   = _macro.get("dji",     {}).get("price",       0)
+            _dj_c   = _macro.get("dji",     {}).get("change_pct",  0)
+
+            _vix_color = "#10B981" if _vix_v < 20 else "#F59E0B" if _vix_v < 30 else "#EF4444"
+            _sox_color = "#EF4444" if _sox_c > 1  else "#10B981" if _sox_c < -1  else "#F59E0B"
+            _twd_color = "#10B981" if _twd_c < -0.3 else "#EF4444" if _twd_c > 0.3 else "#94A3B8"
+            _nq_color  = "#EF4444" if _nq_c  > 0.5 else "#10B981" if _nq_c  < -0.5 else "#94A3B8"
+            _sp_color  = "#EF4444" if _sp_c  > 0.5 else "#10B981" if _sp_c  < -0.5 else "#94A3B8"
+            _dj_color  = "#EF4444" if _dj_c  > 0.5 else "#10B981" if _dj_c  < -0.5 else "#94A3B8"
+
+            _vix_sig = "🟢" if _vix_v < 20 else "🟡" if _vix_v < 30 else "🔴"
+            _sox_sig = "📈" if _sox_c > 1  else "📉" if _sox_c < -1  else "➡️"
+            _twd_sig = "🟢" if _twd_c < -0.3 else "🔴" if _twd_c > 0.3 else "⚪"
+            _nq_sig  = "📈" if _nq_c  > 0.5 else "📉" if _nq_c  < -0.5 else "➡️"
+            _sp_sig  = "📈" if _sp_c  > 0.5 else "📉" if _sp_c  < -0.5 else "➡️"
+            _dj_sig  = "📈" if _dj_c  > 0.5 else "📉" if _dj_c  < -0.5 else "➡️"
+
+            for col, title, val_line, sub_line, color in [
+                (_mc1, "VIX 恐慌指數",
+                 f"{_vix_sig} {_vix_v:.1f}",
+                 f"{_vix_c:+.1f}% | {_macro.get('vix_level','')[:6]}",
+                 _vix_color),
+                (_mc2, "費城半導體 SOX",
+                 f"{_sox_sig} {_sox_c:+.1f}%",
+                 f"{_sox_v:,.0f}",
+                 _sox_color),
+                (_mc3, "台幣 USD/TWD",
+                 f"{_twd_sig} {_twd_v:.2f}",
+                 f"{_twd_c:+.2f}% | {_macro.get('twd_trend','')[:6]}",
+                 _twd_color),
+                (_mc4, "NASDAQ",
+                 f"{_nq_sig} {_nq_c:+.1f}%",
+                 f"{_nq_v:,.0f}",
+                 _nq_color),
+                (_mc5, "S&P 500",
+                 f"{_sp_sig} {_sp_c:+.1f}%",
+                 f"{_sp_v:,.0f}",
+                 _sp_color),
+                (_mc6, "道瓊 DJI",
+                 f"{_dj_sig} {_dj_c:+.1f}%",
+                 f"{_dj_v:,.0f}",
+                 _dj_color),
+            ]:
+                col.markdown(f"""<div class="glass-card" style="padding:10px 8px; text-align:center; border-top:3px solid {color};">
+<div style="font-size:0.6rem; color:#94A3B8; white-space:nowrap;">{title}</div>
+<div style="font-size:1.1rem; font-weight:800; color:{color};">{val_line}</div>
+<div style="font-size:0.6rem; color:#64748B;">{sub_line}</div>
+</div>""", unsafe_allow_html=True)
+
+            # 多空綜合研判（6指標）
+            _bulls = sum([_sox_c > 0, _nq_c > 0, _sp_c > 0, _dj_c > 0, _vix_v < 20, _twd_c < 0])
+            _bears = 6 - _bulls
+            _vc    = "#EF4444" if _bulls >= 5 else "#10B981" if _bears >= 5 else "#F59E0B"
+            _vt    = (
+                f"🔴 強多格局：美股三大指數全面上漲，外資進場意願高，台指期明日開盤偏多" if _bulls >= 5 else
+                f"🟢 強空格局：指數全面下跌、VIX高漲，台指期偏空，請注意風險控管"         if _bears >= 5 else
+                f"🟡 多空互見（多頭訊號 {_bulls}/6）：需等待指標方向一致後再進場"
+            )
+            st.markdown(f"""<div style="margin-top:8px; padding:10px 16px; background:rgba(30,41,59,0.6);
+border-left:4px solid {_vc}; border-radius:8px; font-size:0.82rem; color:#F8FAFC; font-weight:600;">
+🎯 <b>總體環境研判</b>（多頭訊號 {_bulls}/6）：{_vt}
+</div>""", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:0.68rem; color:#475569; margin-top:3px;'>更新時間: {_macro.get('updated','--')}</div>",
+                        unsafe_allow_html=True)
+            st.markdown("---")
+    except Exception:
+        pass
 
     # ── VIX 量表 ─────────────────────────────────────────────────
     _render_vix_gauge(vix_result, lang)
@@ -228,7 +311,6 @@ def render(lang: str):
     for i, r in enumerate(tw_results):
         with (col1 if i % 2 == 0 else col2):
             _render_futures_card(r, lang)
-
     st.markdown("---")
 
     # ── 美股指數期貨 ─────────────────────────────────────────────
@@ -237,7 +319,6 @@ def render(lang: str):
     for i, r in enumerate(us_idx_results):
         with (col1 if i % 2 == 0 else col2):
             _render_futures_card(r, lang)
-
     st.markdown("---")
 
     # ── 商品期貨 ─────────────────────────────────────────────────

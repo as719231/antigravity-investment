@@ -52,6 +52,7 @@ def fetch_fundamentals(stock_id: str) -> dict:
         roe        = info.get("returnOnEquity")        # 0~1 小數
         gross_m    = info.get("grossMargins")          # 0~1 小數
         op_m       = info.get("operatingMargins")      # 0~1 小數
+        ebitda_m   = info.get("ebitdaMargins")         # 0~1 小數
         rev_growth = info.get("revenueGrowth")         # 0~1 小數（年增率）
         earn_grow  = info.get("earningsGrowth")        # 0~1 小數
         debt_eq    = info.get("debtToEquity")          # 已是 % 形式
@@ -60,39 +61,65 @@ def fetch_fundamentals(stock_id: str) -> dict:
         lo52       = info.get("fiftyTwoWeekLow")
         cur_price  = info.get("currentPrice")
         mktcap     = info.get("marketCap")
+        # 資產負債表
+        curr_ratio = info.get("currentRatio")
+        quick_rat  = info.get("quickRatio")
+        total_debt = info.get("totalDebt")
+        total_cash = info.get("totalCash")
+        # 現金流
+        fcf        = info.get("freeCashflow")
+        ocf        = info.get("operatingCashflow")
+        # 额外估値
+        pb         = info.get("priceToBook")
+        peg        = info.get("pegRatio")
+        roa        = info.get("returnOnAssets")        # 0~1 小數
 
-        if eps is not None or pe is not None:
+        if eps is not None or pe is not None or curr_ratio is not None:
             result["available"] = True
 
         result.update({
-            "trailing_eps":     round(eps, 2)          if eps        is not None else None,
-            "forward_eps":      round(fwd_eps, 2)      if fwd_eps    is not None else None,
-            "trailing_pe":      round(pe, 2)           if pe         is not None else None,
-            "forward_pe":       round(fwd_pe, 2)       if fwd_pe     is not None else None,
-            "roe_pct":          round(roe * 100, 1)    if roe        is not None else None,
-            "gross_margin_pct": round(gross_m * 100, 1) if gross_m  is not None else None,
-            "op_margin_pct":    round(op_m * 100, 1)  if op_m       is not None else None,
-            "revenue_growth_pct": round(rev_growth * 100, 1) if rev_growth is not None else None,
-            "earnings_growth_pct": round(earn_grow * 100, 1) if earn_grow is not None else None,
-            "debt_to_equity":   round(debt_eq, 1)      if debt_eq    is not None else None,
-            "dividend_yield_pct": round(div_yield * 100, 2) if div_yield is not None else None,
-            "week52_high":      hi52,
-            "week52_low":       lo52,
-            "current_price":    cur_price,
+            "trailing_eps":      round(eps, 2)           if eps        is not None else None,
+            "forward_eps":       round(fwd_eps, 2)       if fwd_eps    is not None else None,
+            "trailing_pe":       round(pe, 2)            if pe         is not None else None,
+            "forward_pe":        round(fwd_pe, 2)        if fwd_pe     is not None else None,
+            "roe_pct":           round(roe * 100, 1)     if roe        is not None else None,
+            "roa_pct":           round(roa * 100, 1)     if roa        is not None else None,
+            "gross_margin_pct":  round(gross_m * 100, 1) if gross_m   is not None else None,
+            "op_margin_pct":     round(op_m * 100, 1)   if op_m       is not None else None,
+            "ebitda_margin_pct": round(ebitda_m * 100,1) if ebitda_m  is not None else None,
+            "revenue_growth_pct":round(rev_growth*100,1) if rev_growth is not None else None,
+            "earnings_growth_pct":round(earn_grow*100,1) if earn_grow  is not None else None,
+            "debt_to_equity":    round(debt_eq, 1)       if debt_eq    is not None else None,
+            "dividend_yield_pct":round(div_yield*100, 2) if div_yield  is not None else None,
+            "week52_high":       hi52,
+            "week52_low":        lo52,
+            "current_price":     cur_price,
+            # 資產負債表
+            "current_ratio":     round(curr_ratio, 2)   if curr_ratio is not None else None,
+            "quick_ratio":       round(quick_rat, 2)    if quick_rat  is not None else None,
+            "total_debt_b":      round(total_debt/1e8,1) if total_debt is not None else None,  # 億元
+            "total_cash_b":      round(total_cash/1e8,1) if total_cash is not None else None,
+            "net_cash_b":        round((total_cash - total_debt)/1e8,1) if (total_cash and total_debt) else None,
+            # 現金流
+            "fcf_b":             round(fcf/1e8, 1)      if fcf        is not None else None,
+            "ocf_b":             round(ocf/1e8, 1)      if ocf        is not None else None,
+            # 额外估値
+            "price_to_book":     round(pb, 2)            if pb         is not None else None,
+            "peg_ratio":         round(peg, 2)           if peg        is not None else None,
         })
 
-        # PE 相對估值判斷
+        # PE 相對估値判斷
         if pe is not None:
             if pe < 10:
                 result["pe_status"] = f"低估（PE={pe:.1f}，低於一般合理區間）"
             elif pe < 20:
-                result["pe_status"] = f"合理（PE={pe:.1f}，在合理估值區間）"
+                result["pe_status"] = f"合理（PE={pe:.1f}，在合理估値區間）"
             elif pe < 30:
-                result["pe_status"] = f"略高（PE={pe:.1f}，需要較高成長支撐）"
+                result["pe_status"] = f"略高（PE={pe:.1f}，需要較高成長支撑）"
             elif pe < 50:
                 result["pe_status"] = f"偏貴（PE={pe:.1f}，成長預期已充分反映）"
             else:
-                result["pe_status"] = f"極度偏貴（PE={pe:.1f}，需極高成長率支撐）"
+                result["pe_status"] = f"極度偏貴（PE={pe:.1f}，需極高成長率支撑）"
 
         # 52週位置判斷
         if hi52 and lo52 and cur_price:
@@ -105,7 +132,38 @@ def fetch_fundamentals(stock_id: str) -> dict:
             elif pct_in_range > 20:
                 result["position_52w_label"] = "年區間中下段（偏弱）"
             else:
-                result["position_52w_label"] = "接近年低點（低檔，存在價值機會）"
+                result["position_52w_label"] = "接近年低點（低檔，存在價値機會）"
+
+        # 財務健康綜合評分 (0~100)
+        health_score = 50
+        health_items = []
+        if curr_ratio is not None:
+            if curr_ratio >= 2:     health_score += 15; health_items.append("流動比优紀")
+            elif curr_ratio >= 1.5: health_score += 8
+            elif curr_ratio < 1:    health_score -= 15; health_items.append("流動性差")
+        if fcf is not None:
+            if fcf > 0:   health_score += 10; health_items.append("自由現金流正")
+            else:         health_score -= 10; health_items.append("自由現金流負")
+        if total_cash and total_debt:
+            if total_cash > total_debt:  health_score += 10; health_items.append("現金多於負債")
+            elif total_debt > total_cash*3: health_score -= 15; health_items.append("負債偏高")
+        if roe is not None:
+            if roe >= 0.20:  health_score += 10; health_items.append("ROE高")
+            elif roe < 0.05: health_score -= 10
+        if roa is not None:
+            if roa >= 0.10:  health_score += 5
+        health_score = max(0, min(100, health_score))
+        if health_score >= 75:
+            health_label = "🟢 財務健康"
+        elif health_score >= 55:
+            health_label = "🟡 財務穩定"
+        elif health_score >= 40:
+            health_label = "🟠 財務一般"
+        else:
+            health_label = "🔴 財務需注意"
+        result["health_score"] = health_score
+        result["health_label"] = health_label
+        result["health_items"] = health_items
 
     except Exception as e:
         print(f"[fundamental] {stock_id} yfinance 失敗: {e}")
@@ -178,33 +236,70 @@ def format_fundamental_for_ai(fund: dict, rev: dict = None, stock_id: str = "") 
     sid_label = f"（{stock_id}）" if stock_id else ""
     lines = [f"====== 📊 基本面數據 {sid_label}======"]
 
-    pe = fund.get("trailing_pe")
-    fpe = fund.get("forward_pe")
-    eps = fund.get("trailing_eps")
+    pe   = fund.get("trailing_pe")
+    fpe  = fund.get("forward_pe")
+    eps  = fund.get("trailing_eps")
     feps = fund.get("forward_eps")
-    roe = fund.get("roe_pct")
-    gm  = fund.get("gross_margin_pct")
-    om  = fund.get("op_margin_pct")
-    rg  = fund.get("revenue_growth_pct")
-    eg  = fund.get("earnings_growth_pct")
-    dy  = fund.get("dividend_yield_pct")
-    de  = fund.get("debt_to_equity")
-    hi  = fund.get("week52_high")
-    lo  = fund.get("week52_low")
-    pos = fund.get("position_52w_pct")
+    roe  = fund.get("roe_pct")
+    roa  = fund.get("roa_pct")
+    gm   = fund.get("gross_margin_pct")
+    om   = fund.get("op_margin_pct")
+    em   = fund.get("ebitda_margin_pct")
+    rg   = fund.get("revenue_growth_pct")
+    eg   = fund.get("earnings_growth_pct")
+    dy   = fund.get("dividend_yield_pct")
+    de   = fund.get("debt_to_equity")
+    hi   = fund.get("week52_high")
+    lo   = fund.get("week52_low")
+    pos  = fund.get("position_52w_pct")
+    pb   = fund.get("price_to_book")
+    peg  = fund.get("peg_ratio")
+    cr   = fund.get("current_ratio")
+    qr   = fund.get("quick_ratio")
+    fcf  = fund.get("fcf_b")
+    ocf  = fund.get("ocf_b")
+    net_cash = fund.get("net_cash_b")
+
+    _pb_ok   = '✅ 合理' if pb and pb < 3 else ('⚠️ 偏高' if pb and pb < 8 else '❌ 極高')
+    _peg_ok  = '✅ 低估成長股' if peg and peg < 1 else ('⚠️ 合理' if peg and peg < 2 else '❌ 高估')
+    _roe_ok  = '✅ 優秀' if roe and roe >= 15 else ('⚠️ 普通' if roe and roe >= 8 else '❌ 偏低')
+    _roa_ok  = '✅ 優秀' if roa and roa >= 10 else '⚠️ 普通'
+    _gm_ok   = '✅ 高護城河' if gm and gm >= 40 else ('➡️ 正常' if gm and gm >= 20 else '⚠️ 偏低')
+    _rg_ok   = '✅ 成長加速' if rg and rg > 15 else ('➡️ 穩定成長' if rg and rg > 0 else '⚠️ 衰退')
+    _dy_ok   = '✅ 高息股' if dy and dy >= 5 else ''
+    _cr_ok   = '✅ 充裕' if cr and cr >= 2 else ('⚠️ 需注意' if cr and cr >= 1 else '❌ 偏低')
+    _de_ok   = '✅ 財務穩健' if de and de < 50 else ('⚠️ 需注意' if de and de < 100 else '❌ 高負債')
 
     if eps  is not None: lines.append(f"- 每股盈餘(EPS): {eps} 元（追蹤）{f'| 預估EPS: {feps} 元' if feps else ''}")
     if pe   is not None: lines.append(f"- 本益比(PE): {pe} 倍  {fund.get('pe_status', '')}")
     if fpe  is not None: lines.append(f"- 預估本益比(Forward PE): {fpe} 倍")
-    if roe  is not None: lines.append(f"- 股東權益報酬率(ROE): {roe}%  {'✅ 優秀' if roe >= 15 else ('⚠️ 普通' if roe >= 8 else '❌ 偏低')}")
-    if gm   is not None: lines.append(f"- 毛利率: {gm}%  {'✅ 高護城河' if gm >= 40 else ('➡️ 正常' if gm >= 20 else '⚠️ 偏低')}")
+    if pb   is not None: lines.append(f"- 股價淨值比(P/B): {pb}x  {_pb_ok}")
+    if peg  is not None: lines.append(f"- PEG成長比率: {peg}  {_peg_ok}")
+    if roe  is not None: lines.append(f"- ROE股東權益報酬: {roe}%  {_roe_ok}")
+    if roa  is not None: lines.append(f"- ROA資產報酬率: {roa}%  {_roa_ok}")
+    if gm   is not None: lines.append(f"- 毛利率: {gm}%  {_gm_ok}")
+    if em   is not None: lines.append(f"- EBITDA利潤率: {em}%")
     if om   is not None: lines.append(f"- 營業利益率: {om}%")
-    if rg   is not None: lines.append(f"- 營收年增率: {rg:+.1f}%  {'✅ 成長加速' if rg > 15 else ('➡️ 穩定成長' if rg > 0 else '⚠️ 衰退')}")
+    if rg   is not None: lines.append(f"- 營收年增率: {rg:+.1f}%  {_rg_ok}")
     if eg   is not None: lines.append(f"- 獲利年增率: {eg:+.1f}%")
-    if dy   is not None: lines.append(f"- 股息殖利率: {dy}%  {'✅ 高息股' if dy >= 5 else ''}")
-    if de   is not None: lines.append(f"- 負債股東權益比: {de}%  {'✅ 財務穩健' if de < 50 else ('⚠️ 需注意' if de < 100 else '❌ 高負債')}")
+    if dy   is not None: lines.append(f"- 股息殖利率: {dy}%  {_dy_ok}")
+    if cr   is not None: lines.append(f"- 流動比率: {cr}x  {_cr_ok}")
+    if qr   is not None: lines.append(f"- 速動比率: {qr}x")
+    if fcf  is not None:
+        fcf_label = '✅ 現金流充裕' if fcf > 0 else '❌ 現金流為負'
+        lines.append(f"- 自由現金流(FCF): {fcf:+.1f}億元  {fcf_label}")
+    if ocf  is not None: lines.append(f"- 營業現金流(OCF): {ocf:.1f}億元")
+    if net_cash is not None:
+        nc_label = '✅ 淨現金存影，財務健康' if net_cash > 0 else '⚠️ 負債大於現金'
+        lines.append(f"- 淨現金(現金-負債): {net_cash:+.1f}億元  {nc_label}")
+    if de   is not None: lines.append(f"- 負債股東權益比: {de}%  {_de_ok}")
     if hi and lo and pos is not None:
         lines.append(f"- 52週高低點: {lo} ~ {hi} 元  目前位置: {pos}%  → {fund.get('position_52w_label', '')}")
+    # 財務健康評分
+    hs = fund.get("health_score")
+    hl = fund.get("health_label")
+    if hs is not None:
+        lines.append(f"- 財務健康綜合評分: {hs}/100  {hl}")
 
     # 月營收
     if rev and rev.get("available"):

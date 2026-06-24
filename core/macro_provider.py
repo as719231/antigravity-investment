@@ -42,7 +42,7 @@ def fetch_macro_context() -> dict:
     返回 dict，可直接傳入 ai_agent.get_system_instruction。
 
     Keys:
-      vix, sox, usd_twd, nasdaq, sp500,
+      vix, sox, usd_twd, nasdaq, sp500, dji,
       sox_trend (看多/看空), vix_level (低/中/高恐慌)
     """
     global _CACHE, _CACHE_TIME
@@ -51,11 +51,12 @@ def fetch_macro_context() -> dict:
         return _CACHE
 
     tickers = {
-        "vix":    "^VIX",
-        "sox":    "^SOX",
+        "vix":     "^VIX",
+        "sox":     "^SOX",
         "usd_twd": "TWD=X",
-        "nasdaq": "^IXIC",
-        "sp500":  "^GSPC",
+        "nasdaq":  "^IXIC",
+        "sp500":   "^GSPC",
+        "dji":     "^DJI",
     }
 
     result = {"available": False}
@@ -139,6 +140,10 @@ def format_macro_for_ai(macro: dict) -> str:
     sp = macro.get("sp500", {})
     if sp:
         lines.append(f"- S&P 500 指數: {sp['price']:,.2f}  {sp['change_pct']:+.2f}%")
+
+    dji = macro.get("dji", {})
+    if dji:
+        lines.append(f"- 道瓊工業指數(DJI): {dji['price']:,.2f}  {dji['change_pct']:+.2f}%")
 
     lines.append("")
     lines.append("請在分析中引用上述總體經濟數據：")
