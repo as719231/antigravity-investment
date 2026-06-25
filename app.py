@@ -1181,20 +1181,22 @@ with tab_market:
             </div>
         """, unsafe_allow_html=True)
 
-    # 頂部即時指標
-    col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
+    # ── 有選股時才顯示以下分析內容 ─────────────────────────────
+    if stock_id:
+        # 頂部即時指標
+        col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
     
-    # 計算今日漲跌
-    price_today = df.iloc[-1]['close']
-    price_yesterday = df.iloc[-2]['close']
-    change = price_today - price_yesterday
-    pct_change = (change / price_yesterday) * 100
-    
-    delta_str = f"{'+' if change > 0 else ''}{change:.2f} {currency} ({pct_change:+.2f}%)"
-    delta_class = "metric-delta-up" if change >= 0 else "metric-delta-down"
-    
-    with col_m1:
-        st.markdown(f"""
+        # 計算今日漲跌
+        price_today = df.iloc[-1]['close']
+        price_yesterday = df.iloc[-2]['close']
+        change = price_today - price_yesterday
+        pct_change = (change / price_yesterday) * 100
+        
+        delta_str = f"{'+' if change > 0 else ''}{change:.2f} {currency} ({pct_change:+.2f}%)"
+        delta_class = "metric-delta-up" if change >= 0 else "metric-delta-down"
+        
+        with col_m1:
+            st.markdown(f"""
             <div class="glass-card" style="padding: 15px;">
                 <div class="metric-title">{LANG_DICT[selected_lang]["close_price"]}</div>
                 <div class="metric-value">{price_today:.2f} {currency}</div>
@@ -1202,406 +1204,406 @@ with tab_market:
             </div>
         """, unsafe_allow_html=True)
         
-    with col_m2:
-        rsi_status = LANG_DICT[selected_lang]["rsi_overbought"] if metrics['rsi'] > 70 else LANG_DICT[selected_lang]["rsi_oversold"] if metrics['rsi'] < 30 else LANG_DICT[selected_lang]["rsi_neutral"]
-        st.markdown(f"""
-            <div class="glass-card" style="padding: 15px;">
-                <div class="metric-title">{LANG_DICT[selected_lang]["rsi_label"]}</div>
-                <div class="metric-value">{metrics['rsi']:.1f}</div>
-                <div style="font-size: 0.85rem; color: #94A3B8;">{rsi_status}</div>
-            </div>
-        """, unsafe_allow_html=True)
+        with col_m2:
+            rsi_status = LANG_DICT[selected_lang]["rsi_overbought"] if metrics['rsi'] > 70 else LANG_DICT[selected_lang]["rsi_oversold"] if metrics['rsi'] < 30 else LANG_DICT[selected_lang]["rsi_neutral"]
+            st.markdown(f"""
+                <div class="glass-card" style="padding: 15px;">
+                    <div class="metric-title">{LANG_DICT[selected_lang]["rsi_label"]}</div>
+                    <div class="metric-value">{metrics['rsi']:.1f}</div>
+                    <div style="font-size: 0.85rem; color: #94A3B8;">{rsi_status}</div>
+                </div>
+            """, unsafe_allow_html=True)
         
-    with col_m3:
-        kd_status = LANG_DICT[selected_lang]["kd_bullish"] if metrics['k'] > metrics['d'] else LANG_DICT[selected_lang]["kd_bearish"]
-        st.markdown(f"""
-            <div class="glass-card" style="padding: 15px;">
-                <div class="metric-title">{LANG_DICT[selected_lang]["kd_label"]}</div>
-                <div class="metric-value">K {metrics['k']:.1f} / D {metrics['d']:.1f}</div>
-                <div style="font-size: 0.85rem; color: #94A3B8;">{kd_status}</div>
-            </div>
-        """, unsafe_allow_html=True)
+        with col_m3:
+            kd_status = LANG_DICT[selected_lang]["kd_bullish"] if metrics['k'] > metrics['d'] else LANG_DICT[selected_lang]["kd_bearish"]
+            st.markdown(f"""
+                <div class="glass-card" style="padding: 15px;">
+                    <div class="metric-title">{LANG_DICT[selected_lang]["kd_label"]}</div>
+                    <div class="metric-value">K {metrics['k']:.1f} / D {metrics['d']:.1f}</div>
+                    <div style="font-size: 0.85rem; color: #94A3B8;">{kd_status}</div>
+                </div>
+            """, unsafe_allow_html=True)
         
-    with col_m4:
-        vol_status = LANG_DICT[selected_lang]["volatility_high"] if metrics['volatility'] > 0.25 else LANG_DICT[selected_lang]["volatility_low"] if metrics['volatility'] < 0.12 else LANG_DICT[selected_lang]["volatility_stable"]
-        st.markdown(f"""
-            <div class="glass-card" style="padding: 15px;">
-                <div class="metric-title">{LANG_DICT[selected_lang]["volatility_label"]}</div>
-                <div class="metric-value">{metrics['volatility']*100:.1f} %</div>
-                <div style="font-size: 0.85rem; color: #94A3B8;">{vol_status}</div>
-            </div>
-        """, unsafe_allow_html=True)
+        with col_m4:
+            vol_status = LANG_DICT[selected_lang]["volatility_high"] if metrics['volatility'] > 0.25 else LANG_DICT[selected_lang]["volatility_low"] if metrics['volatility'] < 0.12 else LANG_DICT[selected_lang]["volatility_stable"]
+            st.markdown(f"""
+                <div class="glass-card" style="padding: 15px;">
+                    <div class="metric-title">{LANG_DICT[selected_lang]["volatility_label"]}</div>
+                    <div class="metric-value">{metrics['volatility']*100:.1f} %</div>
+                    <div style="font-size: 0.85rem; color: #94A3B8;">{vol_status}</div>
+                </div>
+            """, unsafe_allow_html=True)
         
-    with col_m5:
-        st.markdown(f"""
-            <div class="glass-card" style="padding: 15px;">
-                <div class="metric-title">{LANG_DICT[selected_lang]["yield_label"]}</div>
-                <div class="metric-value">{metrics['est_yield']:.2f} %</div>
-                <div style="font-size: 0.85rem; color: #94A3B8;">{LANG_DICT[selected_lang]["yield_sub"]}</div>
-            </div>
-        """, unsafe_allow_html=True)
+        with col_m5:
+            st.markdown(f"""
+                <div class="glass-card" style="padding: 15px;">
+                    <div class="metric-title">{LANG_DICT[selected_lang]["yield_label"]}</div>
+                    <div class="metric-value">{metrics['est_yield']:.2f} %</div>
+                    <div style="font-size: 0.85rem; color: #94A3B8;">{LANG_DICT[selected_lang]["yield_sub"]}</div>
+                </div>
+            """, unsafe_allow_html=True)
 
-    # 中間 K線圖 與 形態偵測器
-    col_chart, col_signals = st.columns([2, 1])
+        # 中間 K線圖 與 形態偵測器
+        col_chart, col_signals = st.columns([2, 1])
     
-    with col_chart:
-        st.markdown(f"### {LANG_DICT[selected_lang]['chart_title']}")
+        with col_chart:
+            st.markdown(f"### {LANG_DICT[selected_lang]['chart_title']}")
         
-        # 繪製 Plotly 蠟燭圖
-        fig = go.Figure()
+            # 繪製 Plotly 蠟燭圖
+            fig = go.Figure()
         
-        # K線本體
-        # 台灣股市色系：上漲用紅色，下跌用綠色
-        fig.add_trace(go.Candlestick(
-            x=df['date'],
-            open=df['open'],
-            high=df['high'],
-            low=df['low'],
-            close=df['close'],
-            increasing_line_color='#EF4444', # 上漲為紅
-            decreasing_line_color='#10B981', # 下跌為綠
-            increasing_fillcolor='rgba(239, 68, 68, 0.4)',
-            decreasing_fillcolor='rgba(16, 185, 129, 0.4)',
-            name=LANG_DICT[selected_lang]["k_line"]
-        ))
+            # K線本體
+            # 台灣股市色系：上漲用紅色，下跌用綠色
+            fig.add_trace(go.Candlestick(
+                x=df['date'],
+                open=df['open'],
+                high=df['high'],
+                low=df['low'],
+                close=df['close'],
+                increasing_line_color='#EF4444', # 上漲為紅
+                decreasing_line_color='#10B981', # 下跌為綠
+                increasing_fillcolor='rgba(239, 68, 68, 0.4)',
+                decreasing_fillcolor='rgba(16, 185, 129, 0.4)',
+                name=LANG_DICT[selected_lang]["k_line"]
+            ))
         
-        # 均線軌跡
-        fig.add_trace(go.Scatter(x=df['date'], y=df['ma5'], line=dict(color='#38BDF8', width=1.5), name=LANG_DICT[selected_lang]["ma5_label"]))
-        fig.add_trace(go.Scatter(x=df['date'], y=df['ma20'], line=dict(color='#F43F5E', width=1.5), name=LANG_DICT[selected_lang]["ma20_label"]))
-        fig.add_trace(go.Scatter(x=df['date'], y=df['ma60'], line=dict(color='#F59E0B', width=1.5), name=LANG_DICT[selected_lang]["ma60_label"]))
+            # 均線軌跡
+            fig.add_trace(go.Scatter(x=df['date'], y=df['ma5'], line=dict(color='#38BDF8', width=1.5), name=LANG_DICT[selected_lang]["ma5_label"]))
+            fig.add_trace(go.Scatter(x=df['date'], y=df['ma20'], line=dict(color='#F43F5E', width=1.5), name=LANG_DICT[selected_lang]["ma20_label"]))
+            fig.add_trace(go.Scatter(x=df['date'], y=df['ma60'], line=dict(color='#F59E0B', width=1.5), name=LANG_DICT[selected_lang]["ma60_label"]))
         
-        fig.update_layout(
-            template="plotly_dark",
-            paper_bgcolor="#0B0F19",
-            plot_bgcolor="rgba(30, 41, 59, 0.3)",
-            xaxis_rangeslider_visible=False,
-            height=450,
-            margin=dict(l=10, r=10, t=10, b=10),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-        )
-        st.plotly_chart(fig, use_container_width=True)
+            fig.update_layout(
+                template="plotly_dark",
+                paper_bgcolor="#0B0F19",
+                plot_bgcolor="rgba(30, 41, 59, 0.3)",
+                xaxis_rangeslider_visible=False,
+                height=450,
+                margin=dict(l=10, r=10, t=10, b=10),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
-    with col_signals:
-        st.markdown(f"### {LANG_DICT[selected_lang]['patterns_alarm']}")
+        with col_signals:
+            st.markdown(f"### {LANG_DICT[selected_lang]['patterns_alarm']}")
         
-        # 風險評估卡片
-        risk_color = "#10B981" if metrics['risk_score'] < 35 else "#F59E0B" if metrics['risk_score'] < 65 else "#EF4444"
-        risk_level_localized = LANG_DICT[selected_lang]["risk_level_names"].get(metrics['risk_level'], metrics['risk_level'])
-        st.markdown(f"""
-            <div class="glass-card" style="border-left: 5px solid {risk_color}; padding: 18px; margin-bottom: 20px;">
-                <span class="metric-title">{LANG_DICT[selected_lang]["risk_level_title"]}</span>
-                <div style="font-size: 1.8rem; font-weight: 800; color: {risk_color}; margin: 5px 0px;">
-                    {risk_level_localized}
+            # 風險評估卡片
+            risk_color = "#10B981" if metrics['risk_score'] < 35 else "#F59E0B" if metrics['risk_score'] < 65 else "#EF4444"
+            risk_level_localized = LANG_DICT[selected_lang]["risk_level_names"].get(metrics['risk_level'], metrics['risk_level'])
+            st.markdown(f"""
+                <div class="glass-card" style="border-left: 5px solid {risk_color}; padding: 18px; margin-bottom: 20px;">
+                    <span class="metric-title">{LANG_DICT[selected_lang]["risk_level_title"]}</span>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: {risk_color}; margin: 5px 0px;">
+                        {risk_level_localized}
+                    </div>
+                    <div style="font-size: 0.85rem; color: #94A3B8;">
+                        {LANG_DICT[selected_lang]["risk_score_desc"].format(score=metrics['risk_score'])}
+                    </div>
                 </div>
-                <div style="font-size: 0.85rem; color: #94A3B8;">
-                    {LANG_DICT[selected_lang]["risk_score_desc"].format(score=metrics['risk_score'])}
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
         
-        # AI 交易操盤建議卡片
-        if recommendation:
-            rec_action = recommendation["action"]
-            rec_reason = recommendation["reason"].get(selected_lang, recommendation["reason"]["繁體中文"])
-            rec_color = "#10B981" if rec_action == "buy" else "#94A3B8" if rec_action == "watch" else "#F59E0B" if rec_action == "sell_partial" else "#EF4444"
-            rec_action_title = LANG_DICT[selected_lang]["trade_rec_actions"].get(rec_action, rec_action)
+            # AI 交易操盤建議卡片
+            if recommendation:
+                rec_action = recommendation["action"]
+                rec_reason = recommendation["reason"].get(selected_lang, recommendation["reason"]["繁體中文"])
+                rec_color = "#10B981" if rec_action == "buy" else "#94A3B8" if rec_action == "watch" else "#F59E0B" if rec_action == "sell_partial" else "#EF4444"
+                rec_action_title = LANG_DICT[selected_lang]["trade_rec_actions"].get(rec_action, rec_action)
             
-            st.markdown(f"""
-                <div class="glass-card" style="border-left: 5px solid {rec_color}; padding: 18px; margin-bottom: 12px; background: rgba(30, 41, 59, 0.6);">
-                    <span class="metric-title">{LANG_DICT[selected_lang]["trade_rec_title"]}</span>
-                    <div style="font-size: 1.6rem; font-weight: 800; color: {rec_color}; margin: 5px 0px;">
-                        {rec_action_title}
-                    </div>
-                    <div style="font-size: 0.88rem; color: #E2E8F0; line-height: 1.5; margin-top: 8px;">
-                        <b>{LANG_DICT[selected_lang]["trade_rec_reason_label"]}</b> {rec_reason}
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-
-        # 📌 買進/賣出參考價位卡片
-        if price_targets:
-            pt = price_targets
-            lang_buy  = {"繁體中文":"買進參考","English":"Buy Reference","日本語":"買い参考","ไทย":"ราคาซื้ออ้างอิง","Tiếng Việt":"Giá mua tham khảo"}
-            lang_sell = {"繁體中文":"賣出目標","English":"Sell Target","日本語":"売り目標","ไทย":"เป้าขาย","Tiếng Việt":"Mục tiêu bán"}
-            lang_stop = {"繁體中文":"止損參考","English":"Stop Loss","日本語":"損切り","ไทย":"จุดตัดขาดทุน","Tiếng Việt":"Cắt lỗ"}
-            lang_sup  = {"繁體中文":"主要支撐","English":"Support","日本語":"支持","ไทย":"แนวรับ","Tiếng Việt":"Hỗ trợ"}
-            lang_res  = {"繁體中文":"主要壓力","English":"Resistance","日本語":"抵抗","ไทย":"แนวต้าน","Tiếng Việt":"Kháng cự"}
-            lang_pt_title = {"繁體中文":"📌 買賣參考價位","English":"📌 Price Reference Levels","日本語":"📌 売買参考価格","ไทย":"📌 ราคาอ้างอิงสำหรับซื้อขาย","Tiếng Việt":"📌 Mức giá tham chiếu"}
-            lang_batch1= {"繁體中文":"第一批買進","English":"Entry 1","日本語":"第1買い","ไทย":"ซื้อล็อตแรก","Tiếng Việt":"Vào lệnh 1"}
-            lang_batch2= {"繁體中文":"逢低第二批","English":"Entry 2 (Dip)","日本語":"押し目第2買い","ไทย":"ซื้อล็อตสอง(ย่อ)","Tiếng Việt":"Gom thêm"}
-            lang_tp1  = {"繁體中文":"第一目標","English":"Target 1","日本語":"第1目標","ไทย":"เป้าที่ 1","Tiếng Việt":"Mục tiêu 1"}
-            lang_tp2  = {"繁體中文":"第二目標","English":"Target 2","日本語":"第2目標","ไทย":"เป้าที่ 2","Tiếng Việt":"Mục tiêu 2"}
-
-            st.markdown(f"""
-                <div class="glass-card" style="border-left: 5px solid #38BDF8; padding: 14px 18px; margin-bottom: 12px; background: rgba(15,25,50,0.7);">
-                    <div style="font-size:0.85rem; font-weight:700; color:#38BDF8; margin-bottom:8px;">{lang_pt_title.get(selected_lang,'📌 買賣參考價位')}</div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:0.82rem;">
-                        <div style="color:#94A3B8;">{lang_buy.get(selected_lang,'買進參考')}</div>
-                        <div style="color:#94A3B8;">{lang_sell.get(selected_lang,'賣出目標')}</div>
-                        <div>
-                            <span style="color:#10B981; font-weight:700;">▶ {lang_batch1.get(selected_lang,'第一批')}: </span>
-                            <span style="color:#F8FAFC; font-weight:600;">{pt['buy_ideal']} {currency}</span><br>
-                            <span style="color:#6EE7B7; font-weight:600;">▶ {lang_batch2.get(selected_lang,'逢低')}: </span>
-                            <span style="color:#F8FAFC; font-weight:600;">{pt['buy_dip']} {currency}</span><br>
-                            <span style="color:#EF4444; font-weight:600;">✕ {lang_stop.get(selected_lang,'止損')}: </span>
-                            <span style="color:#FCA5A5; font-weight:600;">{pt['stop_loss']} {currency}</span>
+                st.markdown(f"""
+                    <div class="glass-card" style="border-left: 5px solid {rec_color}; padding: 18px; margin-bottom: 12px; background: rgba(30, 41, 59, 0.6);">
+                        <span class="metric-title">{LANG_DICT[selected_lang]["trade_rec_title"]}</span>
+                        <div style="font-size: 1.6rem; font-weight: 800; color: {rec_color}; margin: 5px 0px;">
+                            {rec_action_title}
                         </div>
-                        <div>
-                            <span style="color:#F59E0B; font-weight:700;">◀ {lang_tp1.get(selected_lang,'第一目標')}: </span>
-                            <span style="color:#F8FAFC; font-weight:600;">{pt['take_profit_1']} {currency}</span><br>
-                            <span style="color:#FCD34D; font-weight:600;">◀ {lang_tp2.get(selected_lang,'第二目標')}: </span>
-                            <span style="color:#F8FAFC; font-weight:600;">{pt['take_profit_2']} {currency}</span><br>
-                            <span style="color:#CBD5E1; font-size:0.78rem;">{lang_sup.get(selected_lang,'支撐')}: {pt['primary_support']} | {lang_res.get(selected_lang,'壓力')}: {pt['primary_resistance']}</span>
+                        <div style="font-size: 0.88rem; color: #E2E8F0; line-height: 1.5; margin-top: 8px;">
+                            <b>{LANG_DICT[selected_lang]["trade_rec_reason_label"]}</b> {rec_reason}
                         </div>
                     </div>
-                    <div style="font-size:0.72rem; color:#64748B; margin-top:6px;">⚠️ {'以上價位為技術面計算之參考，非絕對保證，請自行判斷風險' if selected_lang=='繁體中文' else 'These are technical reference prices only. Always apply your own judgment.'}</div>
-                </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
 
-        # ── 方案 I：類型專屬操作策略補充 ──────────────────────
-        if stock_type and stock_type.get("primary_type") and stock_type["primary_type"] != "Unknown":
-            _st_pt   = stock_type["primary_type"]
-            _st_tips = stock_type.get("operation_tips", [])
-            _st_sec  = stock_type.get("secondary_type")
-            _st_s_tips = stock_type.get("secondary_tips", [])
+            # 📌 買進/賣出參考價位卡片
+            if price_targets:
+                pt = price_targets
+                lang_buy  = {"繁體中文":"買進參考","English":"Buy Reference","日本語":"買い参考","ไทย":"ราคาซื้ออ้างอิง","Tiếng Việt":"Giá mua tham khảo"}
+                lang_sell = {"繁體中文":"賣出目標","English":"Sell Target","日本語":"売り目標","ไทย":"เป้าขาย","Tiếng Việt":"Mục tiêu bán"}
+                lang_stop = {"繁體中文":"止損參考","English":"Stop Loss","日本語":"損切り","ไทย":"จุดตัดขาดทุน","Tiếng Việt":"Cắt lỗ"}
+                lang_sup  = {"繁體中文":"主要支撐","English":"Support","日本語":"支持","ไทย":"แนวรับ","Tiếng Việt":"Hỗ trợ"}
+                lang_res  = {"繁體中文":"主要壓力","English":"Resistance","日本語":"抵抗","ไทย":"แนวต้าน","Tiếng Việt":"Kháng cự"}
+                lang_pt_title = {"繁體中文":"📌 買賣參考價位","English":"📌 Price Reference Levels","日本語":"📌 売買参考価格","ไทย":"📌 ราคาอ้างอิงสำหรับซื้อขาย","Tiếng Việt":"📌 Mức giá tham chiếu"}
+                lang_batch1= {"繁體中文":"第一批買進","English":"Entry 1","日本語":"第1買い","ไทย":"ซื้อล็อตแรก","Tiếng Việt":"Vào lệnh 1"}
+                lang_batch2= {"繁體中文":"逢低第二批","English":"Entry 2 (Dip)","日本語":"押し目第2買い","ไทย":"ซื้อล็อตสอง(ย่อ)","Tiếng Việt":"Gom thêm"}
+                lang_tp1  = {"繁體中文":"第一目標","English":"Target 1","日本語":"第1目標","ไทย":"เป้าที่ 1","Tiếng Việt":"Mục tiêu 1"}
+                lang_tp2  = {"繁體中文":"第二目標","English":"Target 2","日本語":"第2目標","ไทย":"เป้าที่ 2","Tiếng Việt":"Mục tiêu 2"}
 
-            TYPE_COLORS_I = {
-                "AI": "#6366F1", "低軌衛星": "#0EA5E9", "軍工": "#EF4444",
-                "機器人": "#8B5CF6", "電動車": "#10B981", "ETF": "#F59E0B",
-                "權值股": "#F97316", "半導體": "#EC4899", "生技醫療": "#14B8A6",
-                "金融": "#84CC16",
-            }
-            _ic = TYPE_COLORS_I.get(_st_pt, "#6366F1")
-            tips_html = "".join([
-                f'<div style="padding:3px 0; font-size:0.82rem; color:#E2E8F0;">📍 {t}</div>'
-                for t in _st_tips
-            ])
-            sec_html = ""
-            if _st_sec and _st_s_tips:
-                _sc = TYPE_COLORS_I.get(_st_sec, "#94A3B8")
-                sec_tips_html = "".join([
-                    f'<div style="padding:2px 0; font-size:0.8rem; color:#CBD5E1;">　📎 {t}</div>'
-                    for t in _st_s_tips[:2]
+                st.markdown(f"""
+                    <div class="glass-card" style="border-left: 5px solid #38BDF8; padding: 14px 18px; margin-bottom: 12px; background: rgba(15,25,50,0.7);">
+                        <div style="font-size:0.85rem; font-weight:700; color:#38BDF8; margin-bottom:8px;">{lang_pt_title.get(selected_lang,'📌 買賣參考價位')}</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:0.82rem;">
+                            <div style="color:#94A3B8;">{lang_buy.get(selected_lang,'買進參考')}</div>
+                            <div style="color:#94A3B8;">{lang_sell.get(selected_lang,'賣出目標')}</div>
+                            <div>
+                                <span style="color:#10B981; font-weight:700;">▶ {lang_batch1.get(selected_lang,'第一批')}: </span>
+                                <span style="color:#F8FAFC; font-weight:600;">{pt['buy_ideal']} {currency}</span><br>
+                                <span style="color:#6EE7B7; font-weight:600;">▶ {lang_batch2.get(selected_lang,'逢低')}: </span>
+                                <span style="color:#F8FAFC; font-weight:600;">{pt['buy_dip']} {currency}</span><br>
+                                <span style="color:#EF4444; font-weight:600;">✕ {lang_stop.get(selected_lang,'止損')}: </span>
+                                <span style="color:#FCA5A5; font-weight:600;">{pt['stop_loss']} {currency}</span>
+                            </div>
+                            <div>
+                                <span style="color:#F59E0B; font-weight:700;">◀ {lang_tp1.get(selected_lang,'第一目標')}: </span>
+                                <span style="color:#F8FAFC; font-weight:600;">{pt['take_profit_1']} {currency}</span><br>
+                                <span style="color:#FCD34D; font-weight:600;">◀ {lang_tp2.get(selected_lang,'第二目標')}: </span>
+                                <span style="color:#F8FAFC; font-weight:600;">{pt['take_profit_2']} {currency}</span><br>
+                                <span style="color:#CBD5E1; font-size:0.78rem;">{lang_sup.get(selected_lang,'支撐')}: {pt['primary_support']} | {lang_res.get(selected_lang,'壓力')}: {pt['primary_resistance']}</span>
+                            </div>
+                        </div>
+                        <div style="font-size:0.72rem; color:#64748B; margin-top:6px;">⚠️ {'以上價位為技術面計算之參考，非絕對保證，請自行判斷風險' if selected_lang=='繁體中文' else 'These are technical reference prices only. Always apply your own judgment.'}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+            # ── 方案 I：類型專屬操作策略補充 ──────────────────────
+            if stock_type and stock_type.get("primary_type") and stock_type["primary_type"] != "Unknown":
+                _st_pt   = stock_type["primary_type"]
+                _st_tips = stock_type.get("operation_tips", [])
+                _st_sec  = stock_type.get("secondary_type")
+                _st_s_tips = stock_type.get("secondary_tips", [])
+
+                TYPE_COLORS_I = {
+                    "AI": "#6366F1", "低軌衛星": "#0EA5E9", "軍工": "#EF4444",
+                    "機器人": "#8B5CF6", "電動車": "#10B981", "ETF": "#F59E0B",
+                    "權值股": "#F97316", "半導體": "#EC4899", "生技醫療": "#14B8A6",
+                    "金融": "#84CC16",
+                }
+                _ic = TYPE_COLORS_I.get(_st_pt, "#6366F1")
+                tips_html = "".join([
+                    f'<div style="padding:3px 0; font-size:0.82rem; color:#E2E8F0;">📍 {t}</div>'
+                    for t in _st_tips
                 ])
-                sec_html = f"""
-                    <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.06);">
-                        <span style="font-size:0.75rem; color:{_sc};">副類型 {_st_sec} 補充</span>
-                        {sec_tips_html}
-                    </div>"""
+                sec_html = ""
+                if _st_sec and _st_s_tips:
+                    _sc = TYPE_COLORS_I.get(_st_sec, "#94A3B8")
+                    sec_tips_html = "".join([
+                        f'<div style="padding:2px 0; font-size:0.8rem; color:#CBD5E1;">　📎 {t}</div>'
+                        for t in _st_s_tips[:2]
+                    ])
+                    sec_html = f"""
+                        <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.06);">
+                            <span style="font-size:0.75rem; color:{_sc};">副類型 {_st_sec} 補充</span>
+                            {sec_tips_html}
+                        </div>"""
 
-            st.markdown(f"""
-                <div class="glass-card" style="padding:14px 18px; margin-bottom:10px;
-                             border-left:3px solid {_ic}; background:rgba(15,20,40,0.6);">
-                    <div style="font-size:0.8rem; color:{_ic}; font-weight:700; margin-bottom:6px;">
-                        🎯 {_st_pt} 類型操作策略
+                st.markdown(f"""
+                    <div class="glass-card" style="padding:14px 18px; margin-bottom:10px;
+                                 border-left:3px solid {_ic}; background:rgba(15,20,40,0.6);">
+                        <div style="font-size:0.8rem; color:{_ic}; font-weight:700; margin-bottom:6px;">
+                            🎯 {_st_pt} 類型操作策略
+                        </div>
+                        {tips_html}
+                        {sec_html}
                     </div>
-                    {tips_html}
-                    {sec_html}
+                """, unsafe_allow_html=True)
+
+            # ── 方案 D：類型專屬風險提示 ───────────────────────────
+            if stock_type and stock_type.get("primary_type") and stock_type["primary_type"] != "Unknown":
+                _st_risks = stock_type.get("risks", [])
+                if _st_risks:
+                    risks_html = "".join([
+                        f'<div style="padding:3px 0; font-size:0.8rem; color:#FCA5A5;">⚠ {r}</div>'
+                        for r in _st_risks
+                    ])
+                    st.markdown(f"""
+                        <div class="glass-card" style="padding:12px 18px; margin-bottom:10px;
+                                     border-left:3px solid #EF4444; background:rgba(239,68,68,0.06);">
+                            <div style="font-size:0.8rem; color:#EF4444; font-weight:700; margin-bottom:5px;">
+                                🔔 {stock_type["primary_type"]} 類型特有風險
+                            </div>
+                            {risks_html}
+                        </div>
+                    """, unsafe_allow_html=True)
+
+            # 偵測形態輸出
+            st.markdown(f"<div style='font-size: 0.9rem; font-weight: bold; color: #94A3B8; margin-bottom: 8px;'>{LANG_DICT[selected_lang]['tech_patterns']}</div>", unsafe_allow_html=True)
+        
+            if signals:
+                for s in signals:
+                    tag_class = "tag-bullish" if s["type"] == "bullish" else "tag-bearish" if s["type"] == "bearish" else "tag-neutral"
+                    action_badge = LANG_DICT[selected_lang]["advisor_badge"].get(s["type"], s["type"])
+                
+                    # 對訊號名稱進行翻譯
+                    translated_name = s["name"]
+                    if selected_lang in SIGNAL_TRANSLATION and s["name"] in SIGNAL_TRANSLATION[selected_lang]:
+                        translated_name = SIGNAL_TRANSLATION[selected_lang][s["name"]]
+                
+                    st.markdown(f"""
+                        <div style="background-color: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                            <span class="{tag_class}">{action_badge} ({LANG_DICT[selected_lang]["strength_label"]} {s['strength']})</span>
+                            <strong style="color: #F8FAFC; font-size: 0.95rem; display: block; margin-top: 5px;">{translated_name}</strong>
+                            <span style="color: #94A3B8; font-size: 0.85rem; display: block; margin-top: 3px;">{s['desc']}</span>
+                        </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.info(LANG_DICT[selected_lang]["no_patterns"])
+
+        # 三大法人資料面板 (全寬顯示在K線與訊號下方)
+        if institutional.get("available"):
+            inst = institutional
+            total_net = inst["total_net"]
+            foreign_net = inst["foreign_net"]
+            trust_net = inst["investment_trust_net"]
+            dealer_net = inst["dealer_net"]
+        
+            inst_title = {"繁體中文":"🏦 三大法人近期買賣超", "English":"🏦 Institutional Investors (30D Net)", "日本語":"🏦 機関投資家 売買動向", "ไทย":"🏦 นักลงทุนสถาบัน", "Tiếng Việt":"🏦 Nhà đầu tư tổ chức"}
+            lbl_foreign = {"繁體中文":"外資/外國機構", "English":"Foreign Investors", "日本語":"外国人", "ไทย":"ต่างชาติ", "Tiếng Việt":"Khối ngoại"}
+            lbl_trust   = {"繁體中文":"投信", "English":"Investment Trust", "日本語":"投資信託", "ไทย":"กองทุนรวม", "Tiếng Việt":"Quỹ đầu tư"}
+            lbl_dealer  = {"繁體中文":"自營商", "English":"Dealers", "日本語":"自己売買", "ไทย":"โบรกเกอร์ตัวเอง", "Tiếng Việt":"Tự doanh"}
+            lbl_total   = {"繁體中文":"三大法人合計", "English":"Total Net", "日本語":"合計", "ไทย":"รวม", "Tiếng Việt":"Tổng cộng"}
+            lbl_consec  = {"繁體中文":f"外資連續{'買超' if inst['consecutive_buy'] > 0 else '賣超'} {max(inst['consecutive_buy'], inst['consecutive_sell'])} 日", "English":f"Foreign {'Buying' if inst['consecutive_buy'] > 0 else 'Selling'} {max(inst['consecutive_buy'], inst['consecutive_sell'])} days", "日本語":f"外国人{'買い' if inst['consecutive_buy'] > 0 else '売り'}継続 {max(inst['consecutive_buy'], inst['consecutive_sell'])} 日", "ไทย":f"ต่างชาติ{'ซื้อ' if inst['consecutive_buy'] > 0 else 'ขาย'}ต่อเนื่อง {max(inst['consecutive_buy'], inst['consecutive_sell'])} วัน", "Tiếng Việt":f"Ngoại {'mua' if inst['consecutive_buy'] > 0 else 'bán'} liên tục {max(inst['consecutive_buy'], inst['consecutive_sell'])} ngày"}
+        
+            def fmt_net(v):
+                color = "#10B981" if v > 0 else "#EF4444" if v < 0 else "#94A3B8"
+                sign = "+" if v > 0 else ""
+                return f'<span style="color:{color}; font-weight:700;">{sign}{v:,}</span>'
+        
+            consec_color = "#10B981" if inst["consecutive_buy"] > 0 else "#EF4444"
+            total_color = "#10B981" if total_net > 0 else "#EF4444" if total_net < 0 else "#94A3B8"
+        
+            st.markdown(f"""
+                <div class="glass-card" style="padding: 16px 20px; margin-top: 16px; border-top: 2px solid rgba(56,189,248,0.3);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <span style="font-size:0.95rem; font-weight:700; color:#38BDF8;">{inst_title.get(selected_lang,'🏦 三大法人近期買賣超')}</span>
+                        <span style="font-size:0.8rem; padding:3px 8px; border-radius:12px; background:rgba({('16,185,129' if inst['consecutive_buy'] > 0 else '239,68,68')},0.15); color:{consec_color}; font-weight:600;">{lbl_consec.get(selected_lang,'')}</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; text-align:center;">
+                        <div style="background:rgba(30,41,59,0.5); border-radius:8px; padding:10px;">
+                            <div style="font-size:0.75rem; color:#94A3B8; margin-bottom:4px;">{lbl_foreign.get(selected_lang,'外資')}</div>
+                            <div style="font-size:1rem;">{fmt_net(foreign_net)}</div>
+                        </div>
+                        <div style="background:rgba(30,41,59,0.5); border-radius:8px; padding:10px;">
+                            <div style="font-size:0.75rem; color:#94A3B8; margin-bottom:4px;">{lbl_trust.get(selected_lang,'投信')}</div>
+                            <div style="font-size:1rem;">{fmt_net(trust_net)}</div>
+                        </div>
+                        <div style="background:rgba(30,41,59,0.5); border-radius:8px; padding:10px;">
+                            <div style="font-size:0.75rem; color:#94A3B8; margin-bottom:4px;">{lbl_dealer.get(selected_lang,'自營商')}</div>
+                            <div style="font-size:1rem;">{fmt_net(dealer_net)}</div>
+                        </div>
+                        <div style="background:rgba(30,41,59,0.4); border-radius:8px; padding:10px; border:1px solid rgba(56,189,248,0.2);">
+                            <div style="font-size:0.75rem; color:#38BDF8; margin-bottom:4px;">{lbl_total.get(selected_lang,'合計')}</div>
+                            <div style="font-size:1rem;">{fmt_net(total_net)}</div>
+                        </div>
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
+        
+            # 顯示最近幾天的法人明細表
+            if inst.get("recent_days"):
+                recent_data = inst["recent_days"][:7]
+                rows_html = ""
+                for r in recent_data:
+                    d_total = r['foreign'] + r['trust'] + r['dealer']
+                    rows_html += f"""<tr>
+                        <td style="color:#94A3B8; font-size:0.78rem; padding:4px 8px;">{r['date']}</td>
+                        <td style="text-align:right; padding:4px 8px; font-size:0.82rem; color:{'#10B981' if r['foreign']>0 else '#EF4444' if r['foreign']<0 else '#64748B'}; font-weight:600;">{'+'if r['foreign']>0 else ''}{r['foreign']:,}</td>
+                        <td style="text-align:right; padding:4px 8px; font-size:0.82rem; color:{'#10B981' if r['trust']>0 else '#EF4444' if r['trust']<0 else '#64748B'}; font-weight:600;">{'+'if r['trust']>0 else ''}{r['trust']:,}</td>
+                        <td style="text-align:right; padding:4px 8px; font-size:0.82rem; color:{'#10B981' if r['dealer']>0 else '#EF4444' if r['dealer']<0 else '#64748B'}; font-weight:600;">{'+'if r['dealer']>0 else ''}{r['dealer']:,}</td>
+                        <td style="text-align:right; padding:4px 8px; font-size:0.82rem; color:{'#10B981' if d_total>0 else '#EF4444' if d_total<0 else '#64748B'}; font-weight:700;">{'+'if d_total>0 else ''}{d_total:,}</td>
+                    </tr>"""
+                st.markdown(f"""
+                    <div style="margin-top:10px; overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+                            <thead>
+                                <tr style="border-bottom:1px solid rgba(255,255,255,0.1);">
+                                    <th style="padding:4px 8px; text-align:left; color:#64748B;">日期</th>
+                                    <th style="padding:4px 8px; text-align:right; color:#64748B;">{lbl_foreign.get(selected_lang,'外資')}</th>
+                                    <th style="padding:4px 8px; text-align:right; color:#64748B;">{lbl_trust.get(selected_lang,'投信')}</th>
+                                    <th style="padding:4px 8px; text-align:right; color:#64748B;">{lbl_dealer.get(selected_lang,'自營商')}</th>
+                                    <th style="padding:4px 8px; text-align:right; color:#64748B;">{lbl_total.get(selected_lang,'合計')}</th>
+                                </tr>
+                            </thead>
+                            <tbody>{rows_html}</tbody>
+                        </table>
+                    </div>
+                """, unsafe_allow_html=True)
+        elif not institutional.get("available"):
+            st.caption("ℹ️ 三大法人資料暫時無法取得（可能為 ETF 或非台股個股）" if selected_lang == "繁體中文" else "ℹ️ Institutional investor data not available for this ticker.")
 
-        # ── 方案 D：類型專屬風險提示 ───────────────────────────
-        if stock_type and stock_type.get("primary_type") and stock_type["primary_type"] != "Unknown":
-            _st_risks = stock_type.get("risks", [])
-            if _st_risks:
-                risks_html = "".join([
-                    f'<div style="padding:3px 0; font-size:0.8rem; color:#FCA5A5;">⚠ {r}</div>'
-                    for r in _st_risks
+        # ── 三大法人五大規則分析面板 ──────────────────────────────────
+        if inst_analysis.get("available"):
+            ia = inst_analysis
+            score     = ia["score"]
+            s_type    = ia["score_type"]
+            s_label   = ia["score_label"]
+            score_color = "#10B981" if s_type == "bullish" else "#EF4444" if s_type == "bearish" else "#94A3B8"
+
+            # 評分顏色對應進度條
+            bar_pct = min(score, 100)
+            bar_color = score_color
+
+            # 單日分級顏色
+            def type_color(t):
+                return "#10B981" if t == "bullish" else "#EF4444" if t == "bearish" else "#94A3B8"
+
+            st.markdown(f"""
+                <div class="glass-card" style="padding:18px 22px; margin-top:14px; border-top:2px solid {score_color}33;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+                        <!-- 評分大圖示 -->
+                        <div style="text-align:center; min-width:110px;">
+                            <div style="font-size:2.4rem; font-weight:900; color:{score_color}; line-height:1;">{score}</div>
+                            <div style="font-size:0.72rem; color:#64748B; margin-top:2px;">/ 100 分</div>
+                            <div style="font-size:0.85rem; font-weight:700; color:{score_color}; margin-top:4px; padding:3px 10px; border-radius:10px; background:{score_color}22;">{s_label}</div>
+                        </div>
+                        <!-- 進度條 + 判定摘要 -->
+                        <div style="flex:1; min-width:200px;">
+                            <div style="background:rgba(255,255,255,0.08); border-radius:6px; height:8px; margin-bottom:10px; overflow:hidden;">
+                                <div style="width:{bar_pct}%; height:100%; background:{bar_color}; border-radius:6px; transition:width 0.6s;"></div>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:0.8rem;">
+                                <div>
+                                    <span style="color:#64748B;">📅 單日強度</span><br>
+                                    <span style="color:{type_color(ia['day_type'])}; font-weight:700;">{ia['day_label']}</span>
+                                    <span style="color:#64748B; font-size:0.72rem;">（{ia['d0_total_wan']:+,.0f} 萬元）</span>
+                                </div>
+                                <div>
+                                    <span style="color:#64748B;">📊 外資連續</span><br>
+                                    <span style="color:{type_color(ia['consec_type'])}; font-weight:700;">{ia['consec_label']}</span>
+                                </div>
+                                <div>
+                                    <span style="color:#64748B;">🏦 法人結構</span><br>
+                                    <span style="color:{type_color(ia['struct_type'])}; font-weight:700;">{ia['struct_label']}</span>
+                                </div>
+                                <div>
+                                    <span style="color:#64748B;">📈 投信連續</span><br>
+                                    <span style="color:{type_color(ia.get('trust_consec_type','neutral'))}; font-weight:700;">{ia['trust_consec_label']}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            """, unsafe_allow_html=True)
+
+            # 評分明細
+            if ia["score_details"]:
+                details_html = " ".join([
+                    f'<span style="background:rgba(16,185,129,0.15); color:#6EE7B7; padding:2px 7px; border-radius:8px; font-size:0.75rem; margin:2px; display:inline-block;">{d[0]} <b>+{d[1]}</b></span>'
+                    for d in ia["score_details"]
                 ])
                 st.markdown(f"""
-                    <div class="glass-card" style="padding:12px 18px; margin-bottom:10px;
-                                 border-left:3px solid #EF4444; background:rgba(239,68,68,0.06);">
-                        <div style="font-size:0.8rem; color:#EF4444; font-weight:700; margin-bottom:5px;">
-                            🔔 {stock_type["primary_type"]} 類型特有風險
-                        </div>
-                        {risks_html}
+                    <div style="padding:0 0 8px 0; border-top:1px solid rgba(255,255,255,0.06); padding-top:10px; margin-top:4px;">
+                        <span style="font-size:0.75rem; color:#64748B; display:block; margin-bottom:5px;">📌 評分明細</span>
+                        {details_html}
                     </div>
                 """, unsafe_allow_html=True)
 
-        # 偵測形態輸出
-        st.markdown(f"<div style='font-size: 0.9rem; font-weight: bold; color: #94A3B8; margin-bottom: 8px;'>{LANG_DICT[selected_lang]['tech_patterns']}</div>", unsafe_allow_html=True)
-        
-        if signals:
-            for s in signals:
-                tag_class = "tag-bullish" if s["type"] == "bullish" else "tag-bearish" if s["type"] == "bearish" else "tag-neutral"
-                action_badge = LANG_DICT[selected_lang]["advisor_badge"].get(s["type"], s["type"])
-                
-                # 對訊號名稱進行翻譯
-                translated_name = s["name"]
-                if selected_lang in SIGNAL_TRANSLATION and s["name"] in SIGNAL_TRANSLATION[selected_lang]:
-                    translated_name = SIGNAL_TRANSLATION[selected_lang][s["name"]]
-                
-                st.markdown(f"""
-                    <div style="background-color: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
-                        <span class="{tag_class}">{action_badge} ({LANG_DICT[selected_lang]["strength_label"]} {s['strength']})</span>
-                        <strong style="color: #F8FAFC; font-size: 0.95rem; display: block; margin-top: 5px;">{translated_name}</strong>
-                        <span style="color: #94A3B8; font-size: 0.85rem; display: block; margin-top: 3px;">{s['desc']}</span>
-                    </div>
-                """, unsafe_allow_html=True)
-        else:
-            st.info(LANG_DICT[selected_lang]["no_patterns"])
-
-    # 三大法人資料面板 (全寬顯示在K線與訊號下方)
-    if institutional.get("available"):
-        inst = institutional
-        total_net = inst["total_net"]
-        foreign_net = inst["foreign_net"]
-        trust_net = inst["investment_trust_net"]
-        dealer_net = inst["dealer_net"]
-        
-        inst_title = {"繁體中文":"🏦 三大法人近期買賣超", "English":"🏦 Institutional Investors (30D Net)", "日本語":"🏦 機関投資家 売買動向", "ไทย":"🏦 นักลงทุนสถาบัน", "Tiếng Việt":"🏦 Nhà đầu tư tổ chức"}
-        lbl_foreign = {"繁體中文":"外資/外國機構", "English":"Foreign Investors", "日本語":"外国人", "ไทย":"ต่างชาติ", "Tiếng Việt":"Khối ngoại"}
-        lbl_trust   = {"繁體中文":"投信", "English":"Investment Trust", "日本語":"投資信託", "ไทย":"กองทุนรวม", "Tiếng Việt":"Quỹ đầu tư"}
-        lbl_dealer  = {"繁體中文":"自營商", "English":"Dealers", "日本語":"自己売買", "ไทย":"โบรกเกอร์ตัวเอง", "Tiếng Việt":"Tự doanh"}
-        lbl_total   = {"繁體中文":"三大法人合計", "English":"Total Net", "日本語":"合計", "ไทย":"รวม", "Tiếng Việt":"Tổng cộng"}
-        lbl_consec  = {"繁體中文":f"外資連續{'買超' if inst['consecutive_buy'] > 0 else '賣超'} {max(inst['consecutive_buy'], inst['consecutive_sell'])} 日", "English":f"Foreign {'Buying' if inst['consecutive_buy'] > 0 else 'Selling'} {max(inst['consecutive_buy'], inst['consecutive_sell'])} days", "日本語":f"外国人{'買い' if inst['consecutive_buy'] > 0 else '売り'}継続 {max(inst['consecutive_buy'], inst['consecutive_sell'])} 日", "ไทย":f"ต่างชาติ{'ซื้อ' if inst['consecutive_buy'] > 0 else 'ขาย'}ต่อเนื่อง {max(inst['consecutive_buy'], inst['consecutive_sell'])} วัน", "Tiếng Việt":f"Ngoại {'mua' if inst['consecutive_buy'] > 0 else 'bán'} liên tục {max(inst['consecutive_buy'], inst['consecutive_sell'])} ngày"}
-        
-        def fmt_net(v):
-            color = "#10B981" if v > 0 else "#EF4444" if v < 0 else "#94A3B8"
-            sign = "+" if v > 0 else ""
-            return f'<span style="color:{color}; font-weight:700;">{sign}{v:,}</span>'
-        
-        consec_color = "#10B981" if inst["consecutive_buy"] > 0 else "#EF4444"
-        total_color = "#10B981" if total_net > 0 else "#EF4444" if total_net < 0 else "#94A3B8"
-        
-        st.markdown(f"""
-            <div class="glass-card" style="padding: 16px 20px; margin-top: 16px; border-top: 2px solid rgba(56,189,248,0.3);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                    <span style="font-size:0.95rem; font-weight:700; color:#38BDF8;">{inst_title.get(selected_lang,'🏦 三大法人近期買賣超')}</span>
-                    <span style="font-size:0.8rem; padding:3px 8px; border-radius:12px; background:rgba({('16,185,129' if inst['consecutive_buy'] > 0 else '239,68,68')},0.15); color:{consec_color}; font-weight:600;">{lbl_consec.get(selected_lang,'')}</span>
-                </div>
-                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; text-align:center;">
-                    <div style="background:rgba(30,41,59,0.5); border-radius:8px; padding:10px;">
-                        <div style="font-size:0.75rem; color:#94A3B8; margin-bottom:4px;">{lbl_foreign.get(selected_lang,'外資')}</div>
-                        <div style="font-size:1rem;">{fmt_net(foreign_net)}</div>
-                    </div>
-                    <div style="background:rgba(30,41,59,0.5); border-radius:8px; padding:10px;">
-                        <div style="font-size:0.75rem; color:#94A3B8; margin-bottom:4px;">{lbl_trust.get(selected_lang,'投信')}</div>
-                        <div style="font-size:1rem;">{fmt_net(trust_net)}</div>
-                    </div>
-                    <div style="background:rgba(30,41,59,0.5); border-radius:8px; padding:10px;">
-                        <div style="font-size:0.75rem; color:#94A3B8; margin-bottom:4px;">{lbl_dealer.get(selected_lang,'自營商')}</div>
-                        <div style="font-size:1rem;">{fmt_net(dealer_net)}</div>
-                    </div>
-                    <div style="background:rgba(30,41,59,0.4); border-radius:8px; padding:10px; border:1px solid rgba(56,189,248,0.2);">
-                        <div style="font-size:0.75rem; color:#38BDF8; margin-bottom:4px;">{lbl_total.get(selected_lang,'合計')}</div>
-                        <div style="font-size:1rem;">{fmt_net(total_net)}</div>
-                    </div>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        # 顯示最近幾天的法人明細表
-        if inst.get("recent_days"):
-            recent_data = inst["recent_days"][:7]
-            rows_html = ""
-            for r in recent_data:
-                d_total = r['foreign'] + r['trust'] + r['dealer']
-                rows_html += f"""<tr>
-                    <td style="color:#94A3B8; font-size:0.78rem; padding:4px 8px;">{r['date']}</td>
-                    <td style="text-align:right; padding:4px 8px; font-size:0.82rem; color:{'#10B981' if r['foreign']>0 else '#EF4444' if r['foreign']<0 else '#64748B'}; font-weight:600;">{'+'if r['foreign']>0 else ''}{r['foreign']:,}</td>
-                    <td style="text-align:right; padding:4px 8px; font-size:0.82rem; color:{'#10B981' if r['trust']>0 else '#EF4444' if r['trust']<0 else '#64748B'}; font-weight:600;">{'+'if r['trust']>0 else ''}{r['trust']:,}</td>
-                    <td style="text-align:right; padding:4px 8px; font-size:0.82rem; color:{'#10B981' if r['dealer']>0 else '#EF4444' if r['dealer']<0 else '#64748B'}; font-weight:600;">{'+'if r['dealer']>0 else ''}{r['dealer']:,}</td>
-                    <td style="text-align:right; padding:4px 8px; font-size:0.82rem; color:{'#10B981' if d_total>0 else '#EF4444' if d_total<0 else '#64748B'}; font-weight:700;">{'+'if d_total>0 else ''}{d_total:,}</td>
-                </tr>"""
-            st.markdown(f"""
-                <div style="margin-top:10px; overflow-x:auto;">
-                    <table style="width:100%; border-collapse:collapse; font-size:0.8rem;">
-                        <thead>
-                            <tr style="border-bottom:1px solid rgba(255,255,255,0.1);">
-                                <th style="padding:4px 8px; text-align:left; color:#64748B;">日期</th>
-                                <th style="padding:4px 8px; text-align:right; color:#64748B;">{lbl_foreign.get(selected_lang,'外資')}</th>
-                                <th style="padding:4px 8px; text-align:right; color:#64748B;">{lbl_trust.get(selected_lang,'投信')}</th>
-                                <th style="padding:4px 8px; text-align:right; color:#64748B;">{lbl_dealer.get(selected_lang,'自營商')}</th>
-                                <th style="padding:4px 8px; text-align:right; color:#64748B;">{lbl_total.get(selected_lang,'合計')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>{rows_html}</tbody>
-                    </table>
-                </div>
-            """, unsafe_allow_html=True)
-    elif not institutional.get("available"):
-        st.caption("ℹ️ 三大法人資料暫時無法取得（可能為 ETF 或非台股個股）" if selected_lang == "繁體中文" else "ℹ️ Institutional investor data not available for this ticker.")
-
-    # ── 三大法人五大規則分析面板 ──────────────────────────────────
-    if inst_analysis.get("available"):
-        ia = inst_analysis
-        score     = ia["score"]
-        s_type    = ia["score_type"]
-        s_label   = ia["score_label"]
-        score_color = "#10B981" if s_type == "bullish" else "#EF4444" if s_type == "bearish" else "#94A3B8"
-
-        # 評分顏色對應進度條
-        bar_pct = min(score, 100)
-        bar_color = score_color
-
-        # 單日分級顏色
-        def type_color(t):
-            return "#10B981" if t == "bullish" else "#EF4444" if t == "bearish" else "#94A3B8"
-
-        st.markdown(f"""
-            <div class="glass-card" style="padding:18px 22px; margin-top:14px; border-top:2px solid {score_color}33;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
-                    <!-- 評分大圖示 -->
-                    <div style="text-align:center; min-width:110px;">
-                        <div style="font-size:2.4rem; font-weight:900; color:{score_color}; line-height:1;">{score}</div>
-                        <div style="font-size:0.72rem; color:#64748B; margin-top:2px;">/ 100 分</div>
-                        <div style="font-size:0.85rem; font-weight:700; color:{score_color}; margin-top:4px; padding:3px 10px; border-radius:10px; background:{score_color}22;">{s_label}</div>
-                    </div>
-                    <!-- 進度條 + 判定摘要 -->
-                    <div style="flex:1; min-width:200px;">
-                        <div style="background:rgba(255,255,255,0.08); border-radius:6px; height:8px; margin-bottom:10px; overflow:hidden;">
-                            <div style="width:{bar_pct}%; height:100%; background:{bar_color}; border-radius:6px; transition:width 0.6s;"></div>
+            # 警訊
+            if ia["warnings"]:
+                for w in ia["warnings"]:
+                    is_danger = "🔴" in w or "⚠️" in w
+                    w_bg = "rgba(239,68,68,0.12)" if is_danger else "rgba(245,158,11,0.12)"
+                    w_border = "#EF4444" if is_danger else "#F59E0B"
+                    st.markdown(f"""
+                        <div style="margin-top:6px; padding:8px 12px; border-left:3px solid {w_border}; background:{w_bg}; border-radius:4px; font-size:0.83rem; color:#F8FAFC;">
+                            {w}
                         </div>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:0.8rem;">
-                            <div>
-                                <span style="color:#64748B;">📅 單日強度</span><br>
-                                <span style="color:{type_color(ia['day_type'])}; font-weight:700;">{ia['day_label']}</span>
-                                <span style="color:#64748B; font-size:0.72rem;">（{ia['d0_total_wan']:+,.0f} 萬元）</span>
-                            </div>
-                            <div>
-                                <span style="color:#64748B;">📊 外資連續</span><br>
-                                <span style="color:{type_color(ia['consec_type'])}; font-weight:700;">{ia['consec_label']}</span>
-                            </div>
-                            <div>
-                                <span style="color:#64748B;">🏦 法人結構</span><br>
-                                <span style="color:{type_color(ia['struct_type'])}; font-weight:700;">{ia['struct_label']}</span>
-                            </div>
-                            <div>
-                                <span style="color:#64748B;">📈 投信連續</span><br>
-                                <span style="color:{type_color(ia.get('trust_consec_type','neutral'))}; font-weight:700;">{ia['trust_consec_label']}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-        """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
 
-        # 評分明細
-        if ia["score_details"]:
-            details_html = " ".join([
-                f'<span style="background:rgba(16,185,129,0.15); color:#6EE7B7; padding:2px 7px; border-radius:8px; font-size:0.75rem; margin:2px; display:inline-block;">{d[0]} <b>+{d[1]}</b></span>'
-                for d in ia["score_details"]
-            ])
-            st.markdown(f"""
-                <div style="padding:0 0 8px 0; border-top:1px solid rgba(255,255,255,0.06); padding-top:10px; margin-top:4px;">
-                    <span style="font-size:0.75rem; color:#64748B; display:block; margin-bottom:5px;">📌 評分明細</span>
-                    {details_html}
-                </div>
-            """, unsafe_allow_html=True)
-
-        # 警訊
-        if ia["warnings"]:
-            for w in ia["warnings"]:
-                is_danger = "🔴" in w or "⚠️" in w
-                w_bg = "rgba(239,68,68,0.12)" if is_danger else "rgba(245,158,11,0.12)"
-                w_border = "#EF4444" if is_danger else "#F59E0B"
-                st.markdown(f"""
-                    <div style="margin-top:6px; padding:8px 12px; border-left:3px solid {w_border}; background:{w_bg}; border-radius:4px; font-size:0.83rem; color:#F8FAFC;">
-                        {w}
-                    </div>
-                """, unsafe_allow_html=True)
-
-        st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
 # ==============================================================================
 # TAB 2: 💼 專屬持股追蹤看板
