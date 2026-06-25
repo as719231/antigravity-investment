@@ -708,6 +708,7 @@ model_descriptions = {
 # --- 側邊欄常用股票選項翻譯 ---
 stock_descriptions = {
     "繁體中文": {
+        "": "🔍 請選擇或輸入股票代號...",
         "00878": "00878 (國泰永續高股息)",
         "0050": "0050 (元大台灣50)",
         "3049": "3049 (精金)",
@@ -716,6 +717,7 @@ stock_descriptions = {
         "2454": "2454 (聯發科)"
     },
     "English": {
+        "": "🔍 Select or enter a stock code...",
         "00878": "00878 (Cathay ESG Dividend ETF)",
         "0050": "0050 (Yuanta Taiwan 50 ETF)",
         "3049": "3049 (Hannstar Touch)",
@@ -724,6 +726,7 @@ stock_descriptions = {
         "2454": "2454 (MediaTek)"
     },
     "日本語": {
+        "": "🔍 銘柄コードを選択または入力してください...",
         "00878": "00878 (国泰サステナ高配当ETF)",
         "0050": "0050 (元大台湾50 ETF)",
         "3049": "3049 (HannStar Touch)",
@@ -732,6 +735,7 @@ stock_descriptions = {
         "2454": "2454 (MediaTek / 聯發科)"
     },
     "ไทย": {
+        "": "🔍 เลือกหรือป้อนรหัสหุ้น...",
         "00878": "00878 (Cathay ESG High Dividend ETF)",
         "0050": "0050 (Yuanta Taiwan 50 ETF)",
         "3049": "3049 (Hannstar Touch)",
@@ -740,6 +744,7 @@ stock_descriptions = {
         "2454": "2454 (MediaTek)"
     },
     "Tiếng Việt": {
+        "": "🔍 Chọn hoặc nhập mã cổ phiếu...",
         "00878": "00878 (ETF Cathay ESG Cổ tức Cao)",
         "0050": "0050 (ETF Yuanta Taiwan 50)",
         "3049": "3049 (Hannstar Touch)",
@@ -1011,8 +1016,10 @@ with st.sidebar:
     st.markdown(f"### {LANG_DICT[selected_lang]['search_title']}")
     stock_options = {stock_descriptions[selected_lang][k]: k for k in stock_descriptions[selected_lang]}
     
-    selected_option = st.selectbox(LANG_DICT[selected_lang]["select_common"], list(stock_options.keys()))
-    stock_id_input = st.text_input(LANG_DICT[selected_lang]["manual_input"], value=stock_options[selected_option])
+    selected_option = st.selectbox(LANG_DICT[selected_lang]["select_common"], list(stock_options.keys()), index=0)
+    # 若選擇提示選項（空字串），手動輸入框預設為空，讓使用者自行輸入
+    prefill_value = stock_options[selected_option]  # 「」或具體代號
+    stock_id_input = st.text_input(LANG_DICT[selected_lang]["manual_input"], value=prefill_value)
     
     st.markdown("---")
     st.markdown(LANG_DICT[selected_lang]["sidebar_warning"])
@@ -1030,26 +1037,34 @@ st.markdown(f"<div class='sub-header'>{LANG_DICT[selected_lang]['sub_header']}</
 # 偵測輸入的股票代號
 stock_id = stock_id_input.strip()
 
-if not stock_id:
-    st.warning(LANG_DICT[selected_lang]["input_warning"])
-    st.stop()
+# 若有輸入股票代號，則載入分析資料；否則使用空資料結構（顯示歡迎頁面）
+if stock_id:
+    with st.spinner(LANG_DICT[selected_lang]["spinner_analyzing"].format(stock_id=stock_id)):
+        analysis = get_cached_stock_signals(stock_id)
 
-# 載入該股的所有訊號與指標
-with st.spinner(LANG_DICT[selected_lang]["spinner_analyzing"].format(stock_id=stock_id)):
-    analysis = get_cached_stock_signals(stock_id)
+    if "error" in analysis:
+        st.error(analysis["error"])
+        st.stop()
 
-if "error" in analysis:
-    st.error(analysis["error"])
-    st.stop()
-
-df = analysis["df"]
-metrics = analysis["metrics"]
-signals = analysis["signals"]
-recommendation = analysis.get("recommendation", None)
-price_targets = analysis.get("price_targets", {})
-institutional = analysis.get("institutional", {"available": False})
-inst_analysis  = analysis.get("inst_analysis",  {"available": False})
-stock_type     = analysis.get("stock_type",     {})   # 股票類型自動判定結果
+    df = analysis["df"]
+    metrics = analysis["metrics"]
+    signals = analysis["signals"]
+    recommendation = analysis.get("recommendation", None)
+    price_targets = analysis.get("price_targets", {})
+    institutional = analysis.get("institutional", {"available": False})
+    inst_analysis  = analysis.get("inst_analysis",  {"available": False})
+    stock_type     = analysis.get("stock_type",     {})
+else:
+    # 空資料結構 — 讓分頁可以正常渲染不報錯
+    analysis = {}
+    df = None
+    metrics = {}
+    signals = []
+    recommendation = None
+    price_targets = {}
+    institutional = {"available": False}
+    inst_analysis  = {"available": False}
+    stock_type     = {}
 
 currency = LANG_DICT[selected_lang]["currency"]
 
@@ -1067,8 +1082,67 @@ tab_market, tab_portfolio, tab_chat, tab_news, tab_screener, tab_lessons = st.ta
 # TAB 1: 📊 即時看盤與型態偵測
 # ==============================================================================
 with tab_market:
-    # ── 方案 A：股票類型標籤 ────────────────────────────────────
-    if stock_type and stock_type.get("primary_type"):
+    # ── 未選股時顯示歡迎儀表板 ────────────────────────────────
+    if not stock_id:
+        st.markdown("""
+        <div style="text-align:center; padding: 20px 0 10px 0;">
+            <div style="font-size: 3.5rem; margin-bottom: 8px;">📈</div>
+            <div style="font-size: 1.6rem; font-weight: 800;
+                        background: linear-gradient(135deg, #6366F1, #8B5CF6, #EC4899);
+                        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                        background-clip: text; margin-bottom: 6px;">
+                歡迎使用 AI 股市理財助手
+            </div>
+            <div style="color: #94A3B8; font-size: 0.95rem; max-width: 520px; margin: 0 auto;">
+                👈 請從左側邊欄選擇常用股票，或直接輸入台股代號開始分析。
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # 功能特色卡片
+        col_a, col_b, col_c = st.columns(3)
+        feature_cards = [
+            ("📊", "即時看盤", "自動辨識 K 線型態、RSI、KD 等技術指標，並提供 AI 風險評估。"),
+            ("💼", "持倉追蹤", "即時計算您的持股損益、報酬率，並追蹤法人買超動態。"),
+            ("💬", "AI 理財專員", "小雅已熟讀您的 14 個交易鐵律，隨時回答您的股市問題。"),
+        ]
+        for col, (icon, title, desc) in zip([col_a, col_b, col_c], feature_cards):
+            with col:
+                st.markdown(f"""
+                <div class="glass-card" style="text-align:center; padding:20px 14px; min-height:140px;">
+                    <div style="font-size:2rem; margin-bottom:8px;">{icon}</div>
+                    <div style="font-weight:700; color:#E2E8F0; margin-bottom:6px;">{title}</div>
+                    <div style="color:#94A3B8; font-size:0.82rem; line-height:1.5;">{desc}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+        col_d, col_e, col_f = st.columns(3)
+        feature_cards2 = [
+            ("📰", "聯網即時新聞", "Google 搜尋 Grounding 技術，一鍵彙整指定股票的最新利多利空。"),
+            ("💡", "智慧選股推薦", "AI 聯網掃描台股與美股，依大師選股心法推薦熱門潛力股。"),
+            ("📚", "股市教學筆記", "隨身攜帶您的 14 鐵律、5 大分時口訣與完整 K 線圖型教學。"),
+        ]
+        for col, (icon, title, desc) in zip([col_d, col_e, col_f], feature_cards2):
+            with col:
+                st.markdown(f"""
+                <div class="glass-card" style="text-align:center; padding:20px 14px; min-height:140px;">
+                    <div style="font-size:2rem; margin-bottom:8px;">{icon}</div>
+                    <div style="font-weight:700; color:#E2E8F0; margin-bottom:6px;">{title}</div>
+                    <div style="color:#94A3B8; font-size:0.82rem; line-height:1.5;">{desc}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+        st.markdown("""
+        <div style="text-align:center; margin-top:22px; padding:14px;
+                    background: linear-gradient(135deg, #1E293B, #0F172A);
+                    border: 1px solid #334155; border-radius:12px;">
+            <span style="color:#64748B; font-size:0.85rem;">
+                💡 持倉追蹤、AI 理財專員、智慧選股、股市教學等功能無需選擇股票即可直接使用。
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
+
+    elif stock_type and stock_type.get("primary_type"):
         pt = stock_type["primary_type"]
         pc = stock_type.get("primary_confidence", 0)
         st_s = stock_type.get("secondary_type")
@@ -1702,10 +1776,15 @@ with tab_chat:
     c_q1, c_q2, c_q3 = st.columns(3)
     
     with c_q1:
-        q1_label = LANG_DICT[selected_lang]["shortcut_q1"].format(stock_id=stock_id)
+        # 若未選股，快捷問題改為詢問大盤走勢
+        if stock_id:
+            q1_label = LANG_DICT[selected_lang]["shortcut_q1"].format(stock_id=stock_id)
+            q1_text  = LANG_DICT[selected_lang]["shortcut_q1_text"].format(stock_id=stock_id)
+        else:
+            q1_label = "📊 幫我分析今日大盤走勢"
+            q1_text  = "請幫我分析今天台灣加權指數與大盤整體走勢，依據我的 14 個鐵律給予觀察重點。"
         if st.button(q1_label):
             # 將快捷問題直接寫入對話
-            q1_text = LANG_DICT[selected_lang]["shortcut_q1_text"].format(stock_id=stock_id)
             st.session_state.chat_history.append({"role": "user", "text": q1_text})
             with st.spinner(LANG_DICT[selected_lang]["chat_spinner"]):
                 resp = generate_advisor_response(
@@ -1761,43 +1840,57 @@ with tab_chat:
 # ==============================================================================
 with tab_news:
     st.markdown(f"### {LANG_DICT[selected_lang]['news_title']}")
-    st.markdown(LANG_DICT[selected_lang]["news_desc"].format(stock_id=stock_id))
-    
-    # 取得名稱 (如果常用)
-    stock_name_map = {
-        "00878": "Cathay ESG Dividend ETF" if selected_lang == "English" else "國泰永續高股息",
-        "0050": "Yuanta Taiwan 50 ETF" if selected_lang == "English" else "元大台灣50",
-        "3049": "Hannstar Touch" if selected_lang == "English" else "精金",
-        "6282": "AcBel Polytech" if selected_lang == "English" else "康舒",
-        "2330": "TSMC" if selected_lang == "English" else "台積電",
-        "2454": "MediaTek" if selected_lang == "English" else "聯發科"
-    }
-    stock_name = stock_name_map.get(stock_id, "")
-    
-    # 選擇分析觀點
-    st.markdown(LANG_DICT[selected_lang]["news_viewpoint"])
-    viewpoint = st.radio(
-        LANG_DICT[selected_lang]["news_perspective"],
-        LANG_DICT[selected_lang]["news_options"],
-        horizontal=True
-    )
-    
-    trigger_btn = st.button(LANG_DICT[selected_lang]["news_trigger"], type="primary")
-    
-    if trigger_btn:
-        viewpoint_short = viewpoint.split(' ')[0]
-        with st.spinner(LANG_DICT[selected_lang]["news_spinner"].format(viewpoint=viewpoint_short)):
-            ai_news_report = get_stock_news_briefing(
-                stock_id, 
-                stock_name, 
-                viewpoint, 
-                model_name=selected_model_name, 
-                selected_lang=selected_lang
-            )
-            
-        st.markdown("---")
-        st.markdown(LANG_DICT[selected_lang]["news_report_title"].format(viewpoint=viewpoint_short))
-        st.info(ai_news_report)
+    if not stock_id:
+        st.markdown("""
+        <div style="text-align:center; padding:40px 20px;">
+            <div style="font-size:3rem; margin-bottom:12px;">📰</div>
+            <div style="font-size:1.1rem; font-weight:600; color:#94A3B8; margin-bottom:8px;">
+                尚未選擇股票
+            </div>
+            <div style="color:#64748B; font-size:0.9rem;">
+                👈 請從左側邊欄選擇或輸入股票代號，即可啟動 AI 聯網新聞分析。
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(LANG_DICT[selected_lang]["news_desc"].format(stock_id=stock_id))
+
+    if stock_id:
+        # 取得名稱 (如果常用)
+        stock_name_map = {
+            "00878": "Cathay ESG Dividend ETF" if selected_lang == "English" else "國泰永續高股息",
+            "0050": "Yuanta Taiwan 50 ETF" if selected_lang == "English" else "元大台灣50",
+            "3049": "Hannstar Touch" if selected_lang == "English" else "精金",
+            "6282": "AcBel Polytech" if selected_lang == "English" else "康舒",
+            "2330": "TSMC" if selected_lang == "English" else "台積電",
+            "2454": "MediaTek" if selected_lang == "English" else "聯發科"
+        }
+        stock_name = stock_name_map.get(stock_id, "")
+        
+        # 選擇分析觀點
+        st.markdown(LANG_DICT[selected_lang]["news_viewpoint"])
+        viewpoint = st.radio(
+            LANG_DICT[selected_lang]["news_perspective"],
+            LANG_DICT[selected_lang]["news_options"],
+            horizontal=True
+        )
+        
+        trigger_btn = st.button(LANG_DICT[selected_lang]["news_trigger"], type="primary")
+        
+        if trigger_btn:
+            viewpoint_short = viewpoint.split(' ')[0]
+            with st.spinner(LANG_DICT[selected_lang]["news_spinner"].format(viewpoint=viewpoint_short)):
+                ai_news_report = get_stock_news_briefing(
+                    stock_id, 
+                    stock_name, 
+                    viewpoint, 
+                    model_name=selected_model_name, 
+                    selected_lang=selected_lang
+                )
+                
+            st.markdown("---")
+            st.markdown(LANG_DICT[selected_lang]["news_report_title"].format(viewpoint=viewpoint_short))
+            st.info(ai_news_report)
 
 # ==============================================================================
 # TAB 5: 💡 智慧選股推薦
