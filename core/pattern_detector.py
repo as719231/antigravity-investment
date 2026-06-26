@@ -13,6 +13,37 @@ def fetch_stock_data(stock_id: str, days: int = 120) -> pd.DataFrame:
     """
     抓取指定台股代號的歷史K線資料
     """
+    if DataLoader is None:
+        # FinMind 未安裝，嘗試從 TWSE 取得近期資料
+        import requests
+        try:
+            url = f"https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY?stockNo={stock_id}&response=json"
+            resp = requests.get(url, timeout=10)
+            data = resp.json()
+            if data.get("stat") == "OK" and data.get("data"):
+                rows = data["data"][-days:] if len(data["data"]) > days else data["data"]
+                records = []
+                for r in rows:
+                    try:
+                        date_str = r[0].replace("/", "-")
+                        parts = date_str.split("-")
+                        date_str = f"{int(parts[0])+1911}-{parts[1]}-{parts[2]}"
+                        records.append({
+                            "date": date_str,
+                            "open": float(r[3].replace(",", "")),
+                            "high": float(r[4].replace(",", "")),
+                            "low": float(r[5].replace(",", "")),
+                            "close": float(r[6].replace(",", "")),
+                            "Trading_Volume": int(r[1].replace(",", "")),
+                        })
+                    except Exception:
+                        continue
+                if records:
+                    return pd.DataFrame(records)
+        except Exception:
+            pass
+        return pd.DataFrame()
+
     dl = DataLoader()
     end_date = datetime.date.today().strftime('%Y-%m-%d')
     start_date = (datetime.date.today() - datetime.timedelta(days=days)).strftime('%Y-%m-%d')
@@ -31,20 +62,22 @@ def fetch_institutional_investors(stock_id: str, days: int = 30) -> dict:
     抓取三大法人（投信、外資、自營商）近期买賣超​超​資料
     回傳 dict 包含: foreign_net, investment_trust_net, dealer_net, 各日明細
     """
+    result = {
+        "available": False,
+        "foreign_net": 0,
+        "investment_trust_net": 0,
+        "dealer_net": 0,
+        "total_net": 0,
+        "consecutive_buy": 0,
+        "consecutive_sell": 0,
+        "recent_days": []
+    }
+    if DataLoader is None:
+        return result
+
     dl = DataLoader()
     end_date = datetime.date.today().strftime('%Y-%m-%d')
     start_date = (datetime.date.today() - datetime.timedelta(days=days)).strftime('%Y-%m-%d')
-    
-    result = {
-        "available": False,
-        "foreign_net": 0,       # 外資近N日净买賣超
-        "investment_trust_net": 0,  # 投信近N日净买賣超
-        "dealer_net": 0,        # 自營商近N日净买賣超
-        "total_net": 0,         # 三大法人合計净买超
-        "consecutive_buy": 0,   # 外資連續買超日數
-        "consecutive_sell": 0,  # 外資連續賣超日數
-        "recent_days": []
-    }
     
     try:
         df = dl.taiwan_stock_institutional_investors(
