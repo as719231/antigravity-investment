@@ -1,7 +1,12 @@
 import os
 import json
 import logging
-import shioaji as sj
+try:
+    import shioaji as sj
+    SHIOAJI_AVAILABLE = True
+except ImportError:
+    sj = None
+    SHIOAJI_AVAILABLE = False
 import config
 from datetime import datetime
 

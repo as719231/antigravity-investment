@@ -1,9 +1,21 @@
-import google.generativeai as genai
+try:
+    from google import genai as google_genai
+    _genai_available = True
+except ImportError:
+    try:
+        import google.generativeai as google_genai
+        _genai_available = True
+    except ImportError:
+        google_genai = None
+        _genai_available = False
 import config
 
 # 設定 Gemini API Key
-if config.GEMINI_API_KEY:
-    genai.configure(api_key=config.GEMINI_API_KEY)
+if _genai_available and config.GEMINI_API_KEY:
+    try:
+        google_genai.configure(api_key=config.GEMINI_API_KEY)
+    except Exception:
+        pass
 
 def get_ai_decision_report(stock_id: str, action: str, metrics: dict, details: str = "") -> str:
     """
@@ -13,10 +25,13 @@ def get_ai_decision_report(stock_id: str, action: str, metrics: dict, details: s
     metrics: risk_calculator.py 計算出來的指標字典
     details: 其他需要傳入的輔助資訊（如：賣出目標價、帳戶餘額等）
     """
-    if not config.GEMINI_API_KEY:
+    if not config.GEMINI_API_KEY or not _genai_available:
         return "⚠️ 未設定 Gemini API Key，無法產生 AI 分析。"
 
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    try:
+        model = google_genai.GenerativeModel('gemini-1.5-flash')
+    except AttributeError:
+        return "⚠️ Gemini SDK 版本不相容，請檢查 requirements.txt。"
     
     # 建立系統 Prompt 語意
     action_chinese = {
