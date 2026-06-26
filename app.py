@@ -4,7 +4,14 @@ import plotly.graph_objects as go
 import os
 import json
 import datetime
-from FinMind.data import DataLoader
+import requests
+
+try:
+    from FinMind.data import DataLoader
+    FINMIND_AVAILABLE = True
+except ImportError:
+    DataLoader = None
+    FINMIND_AVAILABLE = False
 
 import config
 import importlib

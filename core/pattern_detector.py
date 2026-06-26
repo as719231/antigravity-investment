@@ -1,7 +1,12 @@
 import pandas as pd
 import numpy as np
 import datetime
-from FinMind.data import DataLoader
+try:
+    from FinMind.data import DataLoader
+    FINMIND_AVAILABLE = True
+except ImportError:
+    DataLoader = None
+    FINMIND_AVAILABLE = False
 from core.risk_calculator import calculate_indicators
 
 def fetch_stock_data(stock_id: str, days: int = 120) -> pd.DataFrame:
