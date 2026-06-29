@@ -124,51 +124,73 @@ def _fetch_tw_yahoo_scrape(stock_id: str) -> dict:
 # ── 備用：Yahoo Finance JSON API ─────────────────────────────────────
 def _fetch_yahoo_json_api(symbol: str, currency_default: str = "TWD") -> dict:
     """Yahoo Finance JSON API（備用，美股約 2~5 分鐘延遲）"""
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
-    req = urllib.request.Request(url, headers=_HEADERS)
-    try:
-        with urllib.request.urlopen(req, context=_SSL_CTX, timeout=8) as response:
-            data = json.loads(response.read().decode("utf-8"))
-            if not data.get("chart", {}).get("result"):
-                return {"success": False, "error": "No result"}
+    # 嘗試多個端點，提升可靠度
+    endpoints = [
+        f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+        f"https://query2.finance.yahoo.com/v8/finance/chart/{symbol}",
+        f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={symbol}",
+    ]
+    req_headers = {**_HEADERS, "Accept": "application/json", "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8"}
 
-            meta = data["chart"]["result"][0]["meta"]
-            price      = meta.get("regularMarketPrice")
-            prev_close = meta.get("previousClose")
+    for url in endpoints:
+        try:
+            req = urllib.request.Request(url, headers=req_headers)
+            with urllib.request.urlopen(req, context=_SSL_CTX, timeout=8) as response:
+                data = json.loads(response.read().decode("utf-8"))
 
-            if price is None:
-                try:
-                    closes = data["chart"]["result"][0]["indicators"]["quote"][0].get("close", [])
-                    closes = [c for c in closes if c is not None]
-                    if closes:
-                        price = closes[-1]
-                except Exception:
-                    pass
+                # v8/chart 格式
+                if "chart" in data:
+                    if not data.get("chart", {}).get("result"):
+                        continue
+                    meta = data["chart"]["result"][0]["meta"]
+                    price      = meta.get("regularMarketPrice")
+                    prev_close = meta.get("previousClose") or meta.get("chartPreviousClose")
 
-            if price is None:
-                return {"success": False, "error": "Price not available"}
+                # v7/quote 格式
+                elif "quoteResponse" in data:
+                    results = data.get("quoteResponse", {}).get("result", [])
+                    if not results:
+                        continue
+                    q = results[0]
+                    price      = q.get("regularMarketPrice")
+                    prev_close = q.get("regularMarketPreviousClose")
 
-            prev_val   = prev_close or price
-            change     = round(price - prev_val, 4)
-            chg_pct    = round((change / prev_val) * 100, 2) if prev_val else 0.0
-            market_ts  = meta.get("regularMarketTime", 0)
-            now_str    = datetime.datetime.now().strftime("%H:%M:%S")
+                else:
+                    continue
 
-            return {
-                "success":         True,
-                "source":          "YAHOO_JSON",
-                "price":           round(price, 4),
-                "prev_close":      round(prev_val, 4),
-                "change":          change,
-                "change_percent":  chg_pct,
-                "currency":        meta.get("currency", currency_default),
-                "symbol":          symbol,
-                "market_state":    meta.get("marketState", "UNKNOWN"),
-                "market_time":     market_ts,
-                "update_time":     now_str,
-            }
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+                if price is None:
+                    try:
+                        closes = data.get("chart", {}).get("result", [{}])[0].get("indicators", {}).get("quote", [{}])[0].get("close", [])
+                        closes = [c for c in closes if c is not None]
+                        if closes:
+                            price = closes[-1]
+                    except Exception:
+                        pass
+
+                if price is None:
+                    continue
+
+                prev_val   = prev_close or price
+                change     = round(price - prev_val, 4)
+                chg_pct    = round((change / prev_val) * 100, 2) if prev_val else 0.0
+                now_str    = datetime.datetime.now().strftime("%H:%M:%S")
+
+                return {
+                    "success":         True,
+                    "source":          "YAHOO_JSON",
+                    "price":           round(price, 4),
+                    "prev_close":      round(prev_val, 4),
+                    "change":          change,
+                    "change_percent":  chg_pct,
+                    "currency":        currency_default,
+                    "symbol":          symbol,
+                    "market_state":    "REGULAR",
+                    "update_time":     now_str,
+                }
+        except Exception:
+            continue
+
+    return {"success": False, "error": f"HTTP Error 404: Not Found — 無法從 Yahoo Finance 取得 {symbol} 報價，可能為非交易時段或 IP 限制"}
 
 
 # ════════════════════════════════════════════════════════════════════

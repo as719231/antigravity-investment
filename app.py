@@ -1253,7 +1253,16 @@ def draw_realtime_card(stock_id: str, price_targets: dict, selected_lang: str, a
     from core.twse_realtime import get_market_status
     rt = fetch_realtime_price(stock_id)
     if not rt.get("success"):
-        st.warning(f"無法取得即時報價: {rt.get('error')}")
+        # 嘗試從歷史資料取得最後收盤價作為備用
+        try:
+            _df = fetch_stock_data(stock_id, days=5)
+            if not _df.empty:
+                last_close = float(_df.iloc[-1]['close'])
+                st.info(f"📊 即時報價暫時無法取得（非交易時段或網路限制），顯示最後收盤價：**{last_close:.2f} 元**")
+                return
+        except Exception:
+            pass
+        st.warning(f"⚠️ 無法取得即時報價（{rt.get('error', '未知錯誤')}）。請確認股票代號是否正確，或稍後再試。")
         return
 
     price      = rt["price"]
